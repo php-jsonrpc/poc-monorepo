@@ -1,0 +1,15 @@
+name: Find updated package
+description: Return list of updated packages compare to another branch
+outputs:
+  list:
+    description: List of updated packages
+    value: ${{ steps.list-generator.outputs.list }}
+runs:
+  using: composite
+  steps:
+    - name: Generate list
+      id: list-generator
+      shell: bash
+      run: |
+        echo "list={}" >> $GITHUB_OUTPUT
+        echo "OK"
