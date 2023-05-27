@@ -1,0 +1,23 @@
+{
+    "name": "php-jsonrpc/poc-monorepo-pkg1",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "PhpJsonrpc\\PocMonorepoPkg1\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.2"
+    },
+    "authors": [
+        {
+            "name": "Yoanm",
+            "email": "yoanm@users.noreply.github.com"
+        }
+    ],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "0.1-dev"
+        }
+    }
+}
