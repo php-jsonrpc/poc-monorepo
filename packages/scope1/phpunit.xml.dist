@@ -25,8 +25,11 @@
         <listener class="Yoanm\PhpUnitExtended\Listener\YoanmTestsStrategyListener"/>
     </listeners>
     <testsuites>
-        <testsuite name="main">
-            <directory suffix="Test.php">tests</directory>
+        <testsuite name="functional">
+            <directory>tests/Functional/*</directory>
+        </testsuite>
+        <testsuite name="technical">
+            <directory>tests/Technical/*</directory>
         </testsuite>
     </testsuites>
 </phpunit>

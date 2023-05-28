@@ -1,0 +1,6 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Property PhpJsonrpc\\\\PocMonorepoPkg1\\\\Model\\\\Dummy\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: ../../src/Model/Dummy.php

@@ -6,7 +6,11 @@ use Psr\Log\NullLogger;
 
 class Dummy
 {
-    function __construct(public readonly LoggerInterface $logger = new NullLogger()) {
+    private LoggerInterface $logger;
 
+    public function __construct(
+        LoggerInterface $logger = null
+    ) {
+        $this->logger = $logger ?? new NullLogger();
     }
 }

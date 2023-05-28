@@ -4,6 +4,8 @@ TEST_OUTPUT_STYLE ?= dot
 ## DIRECTORY AND FILE
 BUILD_DIRECTORY ?= build
 PHPUNIT_COVERAGE_DIRECTORY ?= ${BUILD_DIRECTORY}/coverage-phpunit
+PHPUNIT_UNIT_COVERAGE_FILE_PATH ?= ${PHPUNIT_COVERAGE_DIRECTORY}/unit.clover
+PHPUNIT_FUNCTIONAL_COVERAGE_FILE_PATH ?= ${PHPUNIT_COVERAGE_DIRECTORY}/functional.clover
 BEHAT_COVERAGE_DIRECTORY ?= ${BUILD_DIRECTORY}/coverage-behat
 REPORTS_DIRECTORY ?= ${BUILD_DIRECTORY}/reports # Codestyle
 
@@ -60,24 +62,59 @@ else
 	PHPCS_DISABLE_WARNING_OPTION=-n
 endif
 
+.PHONY: install
 install:
 	composer install
 
+.PHONY: tests
+tests: unit-tests functional-tests phpstan codestyle
+
+.PHONY: unit-tests
 ifdef PHPUNIT_COVERAGE_OPTION
 unit-tests: create-build-directories
 endif
 unit-tests:
-	./vendor/bin/phpunit ${PHPUNIT_COLOR_OPTION} ${PHPUNIT_OUTPUT_STYLE_OPTION} ${PHPUNIT_COVERAGE_OPTION}
+	./vendor/bin/phpunit ${PHPUNIT_COLOR_OPTION} ${PHPUNIT_OUTPUT_STYLE_OPTION} ${PHPUNIT_COVERAGE_OPTION} --testsuite technical
 
+.PHONY: functional-tests
 ifdef BEHAT_COVERAGE_OPTION
+functional-tests: create-build-directories
+else ifdef PHPUNIT_FUNCTIONAL_COVERAGE_OPTION
 functional-tests: create-build-directories
 endif
 functional-tests:
+	./vendor/bin/phpunit ${PHPUNIT_COLOR_OPTION} ${PHPUNIT_OUTPUT_STYLE_OPTION} ${PHPUNIT_FUNCTIONAL_COVERAGE_OPTION} --testsuite functional
 	./vendor/bin/behat ${BEHAT_COLOR_OPTION} ${BEHAT_OUTPUT_STYLE_OPTION} ${BEHAT_COVERAGE_OPTION} --no-snippets
 
-phpstan:
-	echo "PHPStan $$(pwd)"
+
+.PHONY: phpstan
+phpstan: phpstan-sources phpstan-tests
+
+.PHONY: phpstan-sources
+phpstan-sources:
+	 ./vendor/bin/phpstan --configuration=./.phpstan-sources.neon
+
+.PHONY: phpstan-tests
+phpstan-tests:
+	 ./vendor/bin/phpstan --configuration=./.phpstan-tests.neon
+
+.PHONY: phpstan-update-sources-baseline
+phpstan-update-sources-baseline:
+	 ./vendor/bin/phpstan --configuration=./.phpstan-sources.neon --generate-baseline=./tests/PHPStan/.phpstan-sources-baseline.neon
+
+.PHONY: phpstan-update-tests-baseline
+phpstan-update-tests-baseline:
+	 ./vendor/bin/phpstan --configuration=./.phpstan-tests.neon --generate-baseline=./tests/PHPStan/.phpstan-tests-baseline.neon
+
+.PHONY: codestyle
+codestyle: create-build-directories
+	./vendor/bin/phpcs ${PHPCS_DISABLE_WARNING_OPTION} --standard=phpcs.xml.dist ${PHPCS_COLOR_OPTION} ${PHPCS_REPORT_FILE_OPTION} --report=${PHPCS_REPORT_STYLE}
+
+.PHONY: codestyle-fix
+codestyle-fix:
+	./vendor/bin/phpcbf
 
 # Internal commands
+.PHONY: create-build-directories
 create-build-directories:
 	mkdir -p ${PHPUNIT_COVERAGE_DIRECTORY} ${BEHAT_COVERAGE_DIRECTORY} ${REPORTS_DIRECTORY}

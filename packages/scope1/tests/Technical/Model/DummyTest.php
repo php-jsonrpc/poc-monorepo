@@ -1,5 +1,5 @@
 <?php
-namespace PhpJsonrpc\PocMonorepoPkg1\Tests\Model;
+namespace Tests\Unit\Model;
 
 use PhpJsonrpc\PocMonorepoPkg1\Model\Dummy;
 use PHPUnit\Framework\TestCase;
@@ -11,6 +11,6 @@ class DummyTest extends TestCase
 {
     public function testShouldWork(): void
     {
-        $this->assertInstanceOf(Dummy::class, new Dummy());
+        self::assertInstanceOf(Dummy::class, new Dummy());
     }
 }
