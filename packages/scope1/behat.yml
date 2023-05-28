@@ -8,8 +8,7 @@ default:
       reports: [] # No reports
   suites:
     default:
-      contexts:
-        - Tests\Functional\BehatContext\DocNormalizerContext: ~
+      contexts: []
 coverage:
   extensions:
     DVDoug\Behat\CodeCoverage\Extension:
