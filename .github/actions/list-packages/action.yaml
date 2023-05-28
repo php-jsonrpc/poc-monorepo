@@ -14,9 +14,6 @@ inputs:
     default: 'false'
 runs:
   using: composite
-  plop: plop
-  env:
-    test: test
   steps:
     - name: Compute --state_from CLI option
       if: ${{ inputs.state_from }}
