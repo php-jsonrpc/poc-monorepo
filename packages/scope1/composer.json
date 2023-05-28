@@ -1,20 +1,33 @@
 {
     "name": "php-jsonrpc/poc-monorepo-pkg1",
     "type": "library",
+    "authors": [{ "name": "Yoanm", "email": "yoanm@users.noreply.github.com"}],
     "autoload": {
         "psr-4": {
-            "PhpJsonrpc\\PocMonorepoPkg1\\": "src/"
+            "PhpJsonrpc\\PocMonorepoPkg1\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpJsonrpc\\PocMonorepoPkg1\\Tests\\": "tests"
         }
     },
     "require": {
         "php": "^8.2"
     },
-    "authors": [
-        {
-            "name": "Yoanm",
-            "email": "yoanm@users.noreply.github.com"
+    "require-dev": {
+        "phpspec/prophecy": "^1.15",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpunit/phpunit": "^9.6",
+        "squizlabs/php_codesniffer": "^3.5",
+        "yoanm/php-unit-extended": "^2.0"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true
         }
-    ],
+    },
     "extra": {
         "branch-alias": {
             "dev-master": "0.1-dev"
