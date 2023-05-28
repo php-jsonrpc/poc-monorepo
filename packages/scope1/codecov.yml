@@ -1,3 +1,6 @@
+codecov:
+  bot: "codecov-io"
+
 coverage:
   range: "80...100"
 
