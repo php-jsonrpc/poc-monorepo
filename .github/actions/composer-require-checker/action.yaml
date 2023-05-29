@@ -1,0 +1,18 @@
+name: Composer require checker
+description: Ensure symbols used on project code are defined as composer requirement
+
+inputs:
+  path:
+    description: 'Path to the directory where composer file to analyse is located'
+    required: false
+    default: '.'
+  config_path:
+    description: 'Composer-require-checker config file path'
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - uses: docker://ghcr.io/webfactory/composer-require-checker:4.5.0
+      with:
+        args: ${{ input.config_path && format('--config-file={0}', inputs.config_path) || '' }} ${{ inputs.path }}/composer.json

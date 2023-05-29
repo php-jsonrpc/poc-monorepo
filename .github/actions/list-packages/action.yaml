@@ -1,0 +1,34 @@
+name: List known packages
+description: Output list of known packages
+outputs:
+  list:
+    description: List of updated packages
+    value: ${{ steps.list-generator.outputs.list }}
+inputs:
+  state_from:
+    description: 'Git base reference used to compute package state'
+    required: false
+  updated_only:
+    description: 'Weither to filter out non updated packages or not (requires `state_from` option !)'
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Compute --state_from CLI option
+      if: ${{ inputs.state_from }}
+      shell: bash
+      run: |
+        echo "STATE_FROM_OPTION=--state-from ${{ inputs.state_from }}" >> $GITHUB_ENV
+    - name: Compute --updated-only CLI option
+      if: ${{ inputs.updated_only }}
+      shell: bash
+      run: |
+        echo "UPDATED_ONLY_OPTION=--updated-only" >> $GITHUB_ENV
+    - name: Generate list
+      id: list-generator
+      shell: bash
+      # Do not run command inside a $(...) clause, else errors won't be caught !
+      run: |
+        ./vendor/bin/monorepo-builder packages:list $STATE_FROM_OPTION $UPDATED_ONLY_OPTION --with-field=state --json | tee list.json 
+        echo "list=$(cat list.json)" >> $GITHUB_OUTPUT

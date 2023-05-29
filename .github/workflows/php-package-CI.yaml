@@ -1,0 +1,141 @@
+name: 'Package CI'
+on:
+  workflow_call: # Allows to run the workflow from another workflow
+    inputs:
+      path:
+        description: 'Path to the package'
+        type: string
+        required: false
+  workflow_dispatch: # Allows to run the workflow manually from the Actions tab
+    inputs:
+      path:
+        description: 'Path to the package'
+        type: string
+        required: false
+
+env:
+  package_path: ${{ inputs.path }}
+  absolute_package_path: ${{ github.workspace }}/${{ inputs.path || '.' }}
+  is_macrorepo: ${{ inputs.path != '' }}
+  head_ref: ${{ github.head_ref || github.ref }}
+  TEST_OUTPUT_STYLE: pretty
+  COMPOSER_OPTIONS: --optimize-autoloader
+  CODACY_CACHE_PATH: ~/.cache/codacy
+  CODACY_BIN: ~/.cache/codacy/codacy.sh
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  static_checks:
+    name: Static checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Setup cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.absolute_package_path }}/vendor
+          key: CI-composer-${{ env.head_ref }}-${{ hashFiles(format('{0}/composer.json', env.absolute_package_path)) }}
+
+      - name: Install
+        working-directory: ${{ env.absolute_package_path }}
+        run: make install
+
+      - name: PHPStan
+        working-directory: ${{ env.absolute_package_path }}
+        run: make phpstan
+
+      - name: PHPCs
+        working-directory: ${{ env.absolute_package_path }}
+        run: make codestyle
+
+      - name: ComposerRequireChecker
+        uses: docker://ghcr.io/webfactory/composer-require-checker:4.5.0
+        with:
+          args: --config-file=${{ env.package_path }}/.composer-require-checker.json check ${{ env.package_path }}/composer.json ${{ runner.debug == '1' && '-vvv' || '' }}
+
+  uts_fts:
+    name: PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      max-parallel: 4
+      matrix:
+        include:
+          # Bare minimum => Lowest versions allowed by composer config
+          - php-version: '8.0'
+            composer-flag: --prefer-lowest
+          # Up to date versions => Latest versions allowed by composer config
+          - php-version: '8.2'
+    env:
+      COVERAGE_TYPE: none
+    steps:
+      - name: Checkout ${{ matrix.pkg_name }}
+        uses: actions/checkout@v3
+
+      - name: Enable coverage
+        if: ${{ matrix.php-version == '8.2' }}
+        run: |
+          echo "COVERAGE_OUTPUT_STYLE=clover" >> $GITHUB_ENV
+          echo "COVERAGE_TYPE=xdebug" >> $GITHUB_ENV
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+
+      - name: Setup cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.absolute_package_path }}/vendor
+          key: CI-composer-${{ env.head_ref }}-${{ hashFiles(format('{0}/**/composer.json', env.absolute_package_path)) }}
+
+      - name: Install ${{ matrix.pkg_name }}
+        working-directory: ${{ env.absolute_package_path }}
+        run: make install
+
+      - name: Unit tests ${{ matrix.pkg_name }}
+        working-directory: ${{ env.absolute_package_path }}
+        run: make unit-tests
+
+      - name: Functional tests ${{ matrix.pkg_name }}
+        working-directory: ${{ env.absolute_package_path }}
+        run: make functional-tests
+
+      # See the reports at https://codecov.io/gh/php-jsonrpc/poc-monorepo
+      - name: Upload unit tests coverage to codecov
+        if: ${{ env.COVERAGE_TYPE == 'xdebug' }}
+        uses: codecov/codecov-action@v3
+        with:
+          file: "build/coverage-phpunit/unit.clover"
+          name: "unit-tests-${{ matrix.php-version }}"
+          flags: "unit-tests,php-${{ matrix.php-version }}"
+          fail_ci_if_error: true
+          move_coverage_to_trash: false
+          root_dir: ${{ github.workspace }}
+          working-directory: ${{ env.absolute_package_path }}
+          verbose: ${{ runner.debug == '1' }}
+
+      - name: Upload functional tests coverage to codecov
+        if: ${{ env.COVERAGE_TYPE == 'xdebug' }}
+        uses: codecov/codecov-action@v3
+        with:
+          files: "build/coverage-behat/clover.xml,build/coverage-phpunit/functional.clover"
+          name: "functional-tests-${{ matrix.php-version }}"
+          flags: "functional-tests,php-${{ matrix.php-version }}"
+          fail_ci_if_error: true
+          move_coverage_to_trash: false
+          root_dir: ${{ github.workspace }}
+          working-directory: ${{ env.absolute_package_path }}
+          verbose: ${{ runner.debug == '1' }}

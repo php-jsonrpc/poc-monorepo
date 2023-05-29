@@ -1,0 +1,74 @@
+name: 'CI'
+on: # Build any PRs and main branch changes
+  workflow_dispatch: # Allows to run the workflow manually from the Actions tab
+    commit_sha:
+      description: 'Git commit sha to verify'
+      required: true
+    base_branch:
+      description: 'Git base branch for the comparison'
+      required: true
+      default: 'origin/develop'
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+  push:
+    branches: [ develop ]
+  schedule:
+    - cron: '0 0 1 * *' # Every month
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+env:
+  head_ref: ${{ github.head_ref || github.ref }}
+  base_ref: ${{ github.base_ref || github.ref }}
+
+defaults:
+  run:
+    shell: bash
+
+permissions: {}
+
+jobs:
+  metadata:
+    name: Metadata
+    uses: ./.github/workflows/list-packages.yaml
+
+  updated_packages-CI:
+    # Use matrix.fake_job_suffix in order to have the same job name for every package
+    # and be able to require only one job on branch protection side
+    name: UTs & FTs updated package${{ matrix.fake_job_suffix }}
+    needs: [ metadata ]
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        fake_job_suffix: ['']
+        pkg_name: ${{ fromJson(needs.metadata.outputs.updated_packages) }}
+    uses: ./.github/workflows/php-package-CI.yaml
+    with:
+      path: ${{ fromJson(needs.metadata.outputs.packages)[matrix.pkg_name].path }}
+
+  static_checks:
+    name: Static checks
+    needs: [metadata]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Changelog fragment validity
+        run: echo "OK"
+
+  deps_vulnerability_scan:
+    name: Dependencies vulnerabilities
+    needs: [metadata, static_checks]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # required for "comment-summary-in-pr" option from actions/dependency-review-action
+    steps:
+      - name: Scan
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/dependency-review-action@v3
+        with:
+          comment-summary-in-pr: true

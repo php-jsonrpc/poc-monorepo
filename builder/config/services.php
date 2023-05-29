@@ -1,5 +1,7 @@
 <?php
 
+use PhpJsonRpc\Builder\Command as Commands;
+use PhpJsonRpc\Builder\Helper as Helpers;
 use Symfony\Component\Filesystem\Filesystem;
 use Symplify\MonorepoBuilder\Config\MBConfig;
 use Symplify\MonorepoBuilder\ValueObject\Option;
@@ -18,6 +20,7 @@ return static function (MBConfig $config): void {
     $config->import(__DIR__ . '/post-release_stage_config.php');
 
     $services = $config->services();
+    $services->defaults()->autoconfigure(true)->autowire(true);
     $services->set(Filesystem::class);
-    //$services->set(\PhpJsonRpc\Builder\Command\OtherChangelogRequiredBumpCommand::class);
+    $services->load('PhpJsonRpc\\Builder\\', __DIR__ . '/../src');
 };
