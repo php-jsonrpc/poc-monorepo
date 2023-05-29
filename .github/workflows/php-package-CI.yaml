@@ -27,6 +27,8 @@ defaults:
   run:
     shell: bash
 
+permissions: {}
+
 jobs:
   static_checks:
     name: Static checks

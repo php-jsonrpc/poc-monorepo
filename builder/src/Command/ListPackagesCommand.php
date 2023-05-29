@@ -22,18 +22,13 @@ class ListPackagesCommand extends AbstractSymplifyCommand
 
     protected function configure()
     {
-        try {
-            $this->setName('packages:list')
-                ->setDescription('Output list of known packages')
-                ->addOption('state-from', null, InputOption::VALUE_REQUIRED, 'Resolve package state compared to another branch', null)
-                ->addOption('updated-only', null, InputOption::VALUE_NONE, 'Keep only updated packages. Require --state-from option !')
-                ->addOption('json', null, InputOption::VALUE_NONE, 'Output the list as JSON object')
-                ->addOption('field', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Fields to display, vendor, name and path by default', ['name', 'path'])
-                ->addOption('with-field', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List of fields to append to registered ones', []);
-        } catch (\Throwable $e) {
-            var_dump($e);
-            throw $e;
-        }
+        $this->setName('packages:list')
+            ->setDescription('Output list of known packages')
+            ->addOption('state-from', null, InputOption::VALUE_REQUIRED, 'Resolve package state compared to another branch', null)
+            ->addOption('updated-only', null, InputOption::VALUE_NONE, 'Keep only updated packages. Require --state-from option !')
+            ->addOption('json', null, InputOption::VALUE_NONE, 'Output the list as JSON object')
+            ->addOption('field', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Fields to display, vendor, name and path by default', ['name', 'path'])
+            ->addOption('with-field', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List of fields to append to registered ones', []);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
