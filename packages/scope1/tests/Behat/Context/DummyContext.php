@@ -14,7 +14,7 @@ class DummyContext implements Context
     /**
      * @Given I create a Dummy class instance
      */
-    public function givenICreateADummyClassInstance()
+    public function givenICreateADummyClassInstance(): void
     {
         $this->loggerInstance = new NullLogger();
         $this->instance = new Dummy($this->loggerInstance);
@@ -23,7 +23,7 @@ class DummyContext implements Context
     /**
      * @Then instance should have the right logger attached
      */
-    public function thenInstanceShouldHaveTheRightLoggerAttached()
+    public function thenInstanceShouldHaveTheRightLoggerAttached(): void
     {
         Assert::assertInstanceOf(Dummy::class, $this->instance);
         Assert::assertSame($this->loggerInstance, $this->instance->getLogger());
