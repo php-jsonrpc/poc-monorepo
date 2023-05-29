@@ -53,7 +53,7 @@ class ListPackagesCommand extends AbstractSymplifyCommand
 
         $packageIterator = $this->createPackageIterator($stateFrom, $updatedOnly);
 
-        /** @var array{name: string, path: string, state: string} $packageListInfos */
+        /** @var array{name?: string, vendor?: string, short_name?: string, path?: string, state?: string} $packageListInfos */
         $packageListInfos = [];
         foreach ($packageIterator as $package) {
             $packageListInfos[$package->name] = array_reduce(
@@ -97,9 +97,6 @@ class ListPackagesCommand extends AbstractSymplifyCommand
     }
 
     /**
-     * @param string|null $stateFrom
-     * @param bool        $updatedOnly
-     *
      * @return iterable<string, Package>
      */
     protected function createPackageIterator(?string $stateFrom, bool $updatedOnly): iterable

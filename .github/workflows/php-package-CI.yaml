@@ -113,7 +113,7 @@ jobs:
         working-directory: ${{ env.absolute_package_path }}
         run: make functional-tests
 
-      # See the reports at https://codecov.io/gh/yoanm/php-jsonrpc-server-doc-sdk
+      # See the reports at https://codecov.io/gh/php-jsonrpc/poc-monorepo
       - name: Upload unit tests coverage to codecov
         if: ${{ env.COVERAGE_TYPE == 'xdebug' }}
         uses: codecov/codecov-action@v3

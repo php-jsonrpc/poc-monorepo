@@ -24,7 +24,7 @@ class PackageHelper
     public function getPackages(): iterable
     {
         if (null === $this->cache) {
-         //   $this->cache = [];
+            $this->cache = [];
             $composerFileList = $this->composerJsonProvider->getPackagesComposerFileInfos();
             foreach ($composerFileList as $composerFile) {
                 $composerInfos = $this->jsonFileManager->loadFromFileInfo($composerFile);
@@ -32,7 +32,7 @@ class PackageHelper
                 $pkgName = $composerInfos['name'] ?? null;
                 if (null !== $pkgName) {
                     $package = new Package($pkgName, $composerFile);
-                   // $this->cache[$pkgName] = $package;
+                    $this->cache[$pkgName] = $package;
                     yield $pkgName => $package;
                 }
             }

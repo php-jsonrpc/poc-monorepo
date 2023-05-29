@@ -54,7 +54,7 @@ jobs:
 
   static_checks:
     name: Static checks
-    needs: [metadata, updated_packages-CI]
+    needs: [metadata]
     runs-on: ubuntu-latest
     steps:
       - name: Changelog fragment validity
@@ -62,7 +62,7 @@ jobs:
 
   deps_vulnerability_scan:
     name: Dependencies vulnerabilities
-    needs: [metadata, updated_packages-CI]
+    needs: [metadata, static_checks]
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write # required for "comment-summary-in-pr" option from actions/dependency-review-action

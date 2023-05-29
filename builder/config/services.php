@@ -23,6 +23,4 @@ return static function (MBConfig $config): void {
     $services->defaults()->autoconfigure(true)->autowire(true);
     $services->set(Filesystem::class);
     $services->load('PhpJsonRpc\\Builder\\', __DIR__ . '/../src');
-    //$services->set(Commands\ListPackagesCommand::class);
-    //$services->set(Helpers\PackageHelper::class);
 };
