@@ -1,5 +1,5 @@
 <?php
-namespace Tests\Unit\Model;
+namespace Tests\Technical\Model;
 
 use PhpJsonrpc\PocMonorepoPkg1\Model\Dummy;
 use PHPUnit\Framework\TestCase;

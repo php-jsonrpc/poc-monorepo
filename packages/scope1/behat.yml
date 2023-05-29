@@ -8,7 +8,8 @@ default:
       reports: [] # No reports
   suites:
     default:
-      contexts: []
+      contexts:
+        - Tests\Behat\Context\DummyContext: ~
 coverage:
   extensions:
     DVDoug\Behat\CodeCoverage\Extension:

@@ -13,4 +13,9 @@ class Dummy
     ) {
         $this->logger = $logger ?? new NullLogger();
     }
+
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
 }
