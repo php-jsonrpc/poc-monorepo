@@ -27,8 +27,7 @@ class ChangelogFragmentsRequiredBumpCommand extends AbstractSymplifyCommand
         $this->setName('changelog:fragments:required-bump')
             ->addArgument('package', InputArgument::REQUIRED, 'Path to the package to analyse')
             ->addOption('fragments-dir', 'fp', InputOption::VALUE_REQUIRED, 'Path to fragment directory (relative to package path!). Default to "changelogs/fragments"', 'changelogs/fragments')
-            ->addOption('raw', null, InputOption::VALUE_NONE, 'Output required as raw string')
-        ;
+            ->addOption('raw', null, InputOption::VALUE_NONE, 'Output required as raw string');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -37,14 +36,14 @@ class ChangelogFragmentsRequiredBumpCommand extends AbstractSymplifyCommand
         $changelogFragmentsDirectoryName = (string)$input->getOption('fragments-dir');
         $isRawOutput = $input->getOption('raw');
 
-        if (!$this->smartFileSystem->exists($pkgPath)) {
+        if (false === $this->smartFileSystem->exists($pkgPath)) {
             $this->symfonyStyle->error(sprintf('Package "%s" doesn\'t exist', $pkgPath));
 
             return Command::FAILURE;
         }
 
         $changelogFragmentsDirectoryPath = implode(DIRECTORY_SEPARATOR, [$pkgPath, $changelogFragmentsDirectoryName]);
-        if (!$this->smartFileSystem->exists($changelogFragmentsDirectoryPath)) {
+        if (false === $this->smartFileSystem->exists($changelogFragmentsDirectoryPath)) {
             $this->symfonyStyle->error(sprintf('Changelog fragment directory "%s" doesn\'t exist', $changelogFragmentsDirectoryPath));
 
             return Command::FAILURE;
@@ -61,7 +60,7 @@ class ChangelogFragmentsRequiredBumpCommand extends AbstractSymplifyCommand
 
         $requiredBump = BumpHelper::findRequiredIn($this->createIterator($finder));
 
-        if ($isRawOutput) {
+        if (true === $isRawOutput) {
             $this->symfonyStyle->writeln($requiredBump->name);
         } else {
             $this->symfonyStyle->success(sprintf('%s bump required based on fragments', $requiredBump === BumpEnum::none ? 'No' : ucfirst($requiredBump->name)));
@@ -87,16 +86,16 @@ class ChangelogFragmentsRequiredBumpCommand extends AbstractSymplifyCommand
         }
     }
 
-    protected function guessBump(?Changes $changes): BumpEnum {
-        if (count($changes?->breakingChanges ?? []) > 0) {
+    protected function guessBump(?Changes $changes): BumpEnum
+    {
+        if (false === empty($changes?->breakingChanges ?? [])) {
             return BumpEnum::major;
-        } else if (count($changes?->majorChanges ?? []) > 0) {
+        } else if (false === empty($changes?->majorChanges ?? [])) {
             return BumpEnum::minor;
-        } else if (
-            count($changes?->minorChanges ?? []) > 0
-            || count($changes?->deprecatedFeatures ?? []) > 0
-            || count($changes?->removedFeatures ?? []) > 0
-            || count($changes?->bugfixes ?? []) > 0
+        } else if (false === empty($changes?->minorChanges ?? [])
+            || false === empty($changes?->deprecatedFeatures ?? [])
+            || false === empty($changes?->removedFeatures ?? [])
+            || false === empty($changes?->bugfixes ?? [])
         ) {
             return BumpEnum::patch;
         }
@@ -106,10 +105,11 @@ class ChangelogFragmentsRequiredBumpCommand extends AbstractSymplifyCommand
 
     private function debugMessage(string $message, string $method = 'comment')
     {
-        if (!$this->symfonyStyle->isVerbose() && !$this->symfonyStyle->isVeryVerbose() && !$this->symfonyStyle->isDebug()) {
-            return;
+        if (true === $this->symfonyStyle->isVerbose()
+            || true === $this->symfonyStyle->isVeryVerbose()
+            || true === $this->symfonyStyle->isDebug()
+        ) {
+            $this->symfonyStyle->$method($message);
         }
-
-        $this->symfonyStyle->$method($message);
     }
 }

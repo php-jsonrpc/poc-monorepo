@@ -37,7 +37,8 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      state_from: ${{ env.base_ref }}
+      # Copy of env.base_ref as `env` is not managed in those properties
+      state_from: ${{ github.event.pull_request.base.ref || github.event.base_ref || github.base_ref || github.ref }}
 
   updated_packages-CI:
     # Use matrix.fake_job_suffix in order to have the same job name for every package
