@@ -11,6 +11,7 @@ class DummyContext implements Context
 {
     private ?Dummy $instance;
     private ?LoggerInterface $loggerInstance;
+
     /**
      * @Given I create a Dummy class instance
      */
