@@ -6,7 +6,7 @@ on:
         description: 'Git base reference used to compute package state'
         type: string
         required: false
-        default: 'develop'
+        default: ''
       state_from_remote:
         description: 'Git remote related to base reference'
         type: string
@@ -27,8 +27,8 @@ on:
         description: List of packages
         value: ${{ jobs.main.outputs.packages }}
       updated_packages:
-        description: List of updated packages
-        value: ${{ jobs.main.outputs.updated_packages }}
+        description: List of updated package names
+        value: ${{ jobs.main.outputs.updated_package_names }}
 
 permissions: {}
 
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.list-generator.outputs.list }}
-      updated_packages: ${{ steps.updated-packages-list-generator.outputs.list }}
+      updated_package_names: ${{ steps.updated-packages-list-generator.outputs.list }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3

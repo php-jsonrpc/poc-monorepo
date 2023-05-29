@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace PhpJsonRpc\Builder\Model;
+namespace PhpJsonRpc\Builder\Model\Package;
 
 enum PackageState: string
 {

@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  head_ref: ${{ github.head_ref || github.ref }}
-  base_ref: ${{ github.base_ref || github.ref }}
+  head_ref: ${{ github.event.pull_request.head.ref || github.event.head_ref || github.head_ref || github.ref }}
+  base_ref: ${{ github.event.pull_request.base.ref || github.event.base_ref || github.base_ref || github.ref }}
 
 defaults:
   run:
@@ -36,19 +36,21 @@ jobs:
   metadata:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
+    with:
+      state_from: ${{ env.base_ref }}
 
   updated_packages-CI:
     # Use matrix.fake_job_suffix in order to have the same job name for every package
     # and be able to require only one job on branch protection side
     name: UTs & FTs updated package${{ matrix.fake_job_suffix }}
-    if: ${{ needs.metadata.outputs.updated_packages != '[]' && needs.metadata.outputs.updated_packages != '' }}
+    if: ${{ needs.metadata.outputs.updated_package_names != '[]' && needs.metadata.outputs.updated_package_names != '' }}
     needs: [ metadata ]
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
         fake_job_suffix: ['']
-        pkg_name: ${{ fromJson(needs.metadata.outputs.updated_packages) }}
+        pkg_name: ${{ fromJson(needs.metadata.outputs.updated_package_names) }}
     uses: ./.github/workflows/php-package-CI.yaml
     with:
       path: ${{ fromJson(needs.metadata.outputs.packages)[matrix.pkg_name].path }}

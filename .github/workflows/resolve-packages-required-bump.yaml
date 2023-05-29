@@ -1,0 +1,40 @@
+name: Resolve packages required bump
+on:
+  workflow_call:
+    inputs:
+      packages:
+        description: 'JSON encoded list of packages from "packages:list" command'
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  main:
+    name: Resolve ${{ matrix.name }} required bump
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include: ${{ fromJson(inputs.packages) }}
+    env:
+      package_path: ${{ matrix.path }}
+      absolute_package_path: ${{ github.workspace }}/${{ matrix.path || '.' }}
+    outputs:
+      value: ${{ steps.generator.outputs.value }}
+    steps:
+      - name: Resolve
+        id: generator
+        uses: ./.github/actions/resolve-required-bump
+        with:
+          path: ${{ matrix.path }}
+
+  compute:
+    needs: [main]
+    outputs:
+      value: ${{ steps.generator.outputs.value }}
+    steps:
+      - shell: bash
+        run: echo "${{ toJson(needs.main.outputs) }}"
+

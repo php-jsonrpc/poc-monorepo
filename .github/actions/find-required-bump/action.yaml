@@ -1,0 +1,23 @@
+name: Find required version bump
+description: Compute required version bump based on provided list
+
+inputs:
+  list:
+    description: 'Bump list as JSON string'
+    required: true
+
+outputs:
+  value:
+    description: Required bump as text
+    value: ${{ steps.generator.outputs.value }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate
+      id: generator
+      shell: bash
+      # Do not run command inside a $(...) clause, else errors won't be caught !
+      run: |
+        ./vendor/bin/monorepo-builder version:required-bump --raw ${{ join(fromJson(inputs.list), ' ') }} | tee data.json 
+        echo "value=$(cat data.json)" >> $GITHUB_OUTPUT

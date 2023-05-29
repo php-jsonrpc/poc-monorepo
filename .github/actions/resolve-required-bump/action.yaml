@@ -1,0 +1,23 @@
+name: Resolve required version bump
+description: Load fragments and compute required version bump
+
+inputs:
+  path:
+    description: 'File path to the package'
+    required: true
+
+outputs:
+  value:
+    description: Required bump as text
+    value: ${{ steps.generator.outputs.value }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate
+      id: generator
+      shell: bash
+      # Do not run command inside a $(...) clause, else errors won't be caught !
+      run: |
+        ./vendor/bin/monorepo-builder changelog:fragment:required-bump ${{ inputs.path }} --raw | tee data.json 
+        echo "value=$(cat data.json)" >> $GITHUB_OUTPUT

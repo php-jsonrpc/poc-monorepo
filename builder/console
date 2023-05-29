@@ -7,6 +7,6 @@ use Symfony\Component\Console\Application;
 
 $application = new Application('echo', '1.0.0');
 
-$application->add(new Commands\ChangelogRequiredBumpCommand());
+$application->add(new Commands\OLDChangelogRequiredBumpCommand());
 
 $application->run();

@@ -17,7 +17,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 // the name of the command is what users type after "php bin/console"
 #[AsCommand(name: 'changelog:required-bump')]
-class ChangelogRequiredBumpCommand extends Command
+class OLDChangelogRequiredBumpCommand extends Command
 {
     const FILE_PATH = '../changelogs/changelog.yaml';
 

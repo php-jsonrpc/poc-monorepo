@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace PhpJsonRpc\Builder\Changelog;
+namespace PhpJsonRpc\Builder\Model\Changelog;
 
 use Symfony\Component\Yaml\Yaml;
 
