@@ -20,9 +20,15 @@
         "symfony/yaml": "^6.2",
         "symplify/monorepo-builder": "^11.2"
     },
+    "autoload": {
+        "psr-4": {
+            "PhpJsonrpc\\PocMonorepoPkg1\\": "packages/scope1/src/"
+        }
+    },
     "autoload-dev": {
         "psr-4": {
-            "PhpJsonRpc\\Builder\\": "builder/src"
+            "PhpJsonRpc\\Builder\\": "builder/src",
+            "Symplify\\Tests\\": "tests"
         }
     },
     "config": {
@@ -30,6 +36,9 @@
         "allow-plugins": {
             "phpstan/extension-installer": true
         }
+    },
+    "replace": {
+        "php-jsonrpc/poc-monorepo-pkg1": "0.1-dev"
     },
     "minimum-stability": "stable"
 }

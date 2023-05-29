@@ -1,0 +1,131 @@
+name: Validate GitHub config
+on:
+  pull_request:
+    paths:
+      - '**/.github/actions/**/action.yaml'
+      - '**/.github/actions/**/action.yml'
+      - '**/.github/workflows/**/*.yaml'
+      - '**/.github/workflows/**/*.yml'
+    types:
+      - opened
+      - edited
+      - synchronize
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+permissions: {}
+
+jobs:
+  metadata:
+    name: Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.result }}
+    steps:
+      - name: Checkout ${{ matrix.pkg_name }}
+        uses: actions/checkout@v3
+
+      - name: Setup cache
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ github.workspace }}/cache/package-lock.json
+            ${{ github.workspace }}/cache/node_modules
+          key: validate-github-action-config-node-cache
+
+      - name: Create cache directory
+        if: ${{ !steps.cache.output.hit }}
+        shell: bash
+        run: |
+          mkdir -p ${{ github.workspace }}/cache
+          echo "{}" > ${{ github.workspace }}/cache/package-lock.json
+
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          list-files: json
+          filters: |
+            actions:
+              - '**/.github/actions/**/action.yaml'
+              - '**/.github/actions/**/action.yml'
+            workflows:
+              - '**/.github/workflows/**/*.yaml'
+              - '**/.github/workflows/**/*.yml'
+
+      - name: Configure Node
+        id: node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          check-latest: true
+          cache: npm
+          cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
+
+      - name: Install required NodeJs libs
+        if: ${{ !steps.node.output.cache-hit }}
+        shell: bash
+        run: npm install yaml
+
+      - name: Prepare matrix
+        id: matrix
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const ignoredPatternRegexp = {
+              '.github/workflows/validate-github-action-configs.yaml': '\\/jobs\\/validate\\/strategy\\/matrix\\/include: should be array \\(null\\)|\\/jobs\\/validate: should NOT have additional properties \\(runs-on\\)|\\/jobs\\/validate: should match exactly one schema in oneOf \\(null\\)'
+            };
+            const yaml = require('yaml');
+            const fs = require('fs');
+            async function getName(filepath) {
+              const content = fs.readFileSync(filepath, 'utf8')
+              const decoded = yaml.parse(content);
+            
+              return 'name' in decoded ? decoded.name : null;
+            }
+            const list = [];
+            for (const item of JSON.parse('${{ steps.changes.outputs.workflows_files }}')) {
+              list.push({
+                file: item, 
+                type: 'workflow', 
+                name: await getName(item), 
+                ignoredPatternRegexp: item in ignoredPatternRegexp ? ignoredPatternRegexp[item] : null
+              });
+            }
+            for (const item of JSON.parse('${{ steps.changes.outputs.actions_files }}')) {
+              list.push({
+                file: item, 
+                type: 'action', 
+                name: await getName(item), 
+                ignoredPatternRegexp: item in ignoredPatternRegexp ? ignoredPatternRegexp[item] : null
+              });
+            }
+
+            return list;
+          
+
+  validate:
+    name: "\"${{ matrix.name || matrix.file }}\" ${{ matrix.type }}"
+    runs-on: ubuntu-latest
+    needs: [ metadata ]
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include: ${{ fromJson(needs.metadata.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Validate
+        uses: ./.github/actions/validate-github-action-config
+        with:
+          file: ${{ matrix.file }}
+          type: ${{ matrix.type }}
+          ignoredPatternRegexp: ${{ matrix.ignoredPatternRegexp }}

@@ -1,0 +1,34 @@
+coverage:
+  range: "80...100"
+
+flags:
+  nightly:
+    joined: false
+
+comment:
+  layout: "header, diff, flags, files, components"  # show component info and file info in the PR comment
+  show_carryforward_flags: true
+
+github_checks:
+  annotations: true
+
+component_management:
+  default_rules:  # default rules that will be inherited by all components
+    statuses:
+      - type: project # in this case every component that doens't have a status defined will have a project type one
+        target: auto
+        branches:
+          - "!main"
+  individual_components:
+    - component_id: scope1
+      name: php-jsonrpc/poc-monorepo-pkg1
+      paths:
+        - packages/scope1/**
+    - component_id: module_core
+      name: core
+      paths:
+        - builder/**
+      statuses: # the core component has its own statuses
+        - type: project
+          target: auto
+        - type: patch
