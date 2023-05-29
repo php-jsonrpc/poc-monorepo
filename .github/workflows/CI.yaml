@@ -41,6 +41,7 @@ jobs:
     # Use matrix.fake_job_suffix in order to have the same job name for every package
     # and be able to require only one job on branch protection side
     name: UTs & FTs updated package${{ matrix.fake_job_suffix }}
+    if: ${{ needs.metadata.outputs.updated_packages != '[]' && needs.metadata.outputs.updated_packages != '' }}
     needs: [ metadata ]
     strategy:
       fail-fast: false
