@@ -22,16 +22,21 @@ component_management:
         target: auto
         branches:
           - "!main"
+      - type: patch
   individual_components:
     - component_id: scope1
       name: php-jsonrpc/poc-monorepo-pkg1
       paths:
         - packages/scope1/**
+      statuses:
+        - type: project
+          target: auto
+        - type: patch
     - component_id: macrorepo
       name: macrorepo
       paths:
         - builder/**
-      statuses: # the core component has its own statuses
+      statuses:
         - type: project
           target: auto
         - type: patch
