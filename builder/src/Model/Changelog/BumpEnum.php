@@ -19,7 +19,7 @@ enum BumpEnum: int
             'minor' => self::minor,
             'patch' => self::patch,
             'none' => self::none,
-            default => throw new ValueError(sprintf('Unknown value "%s"', $value))
+            default => throw new ValueError(sprintf('Unknown bump "%s"', $value))
         };
     }
 }
