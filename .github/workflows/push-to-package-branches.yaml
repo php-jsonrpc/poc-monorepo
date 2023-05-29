@@ -1,5 +1,4 @@
-name: Split and push packages to maintenance branches
-description: Split packages and push changes on their respective maintenance branches
+name: Push to package branches
 on:
   push:
     branches: [ develop ]
