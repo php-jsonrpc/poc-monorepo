@@ -53,11 +53,11 @@ jobs:
           list-files: json
           filters: |
             actions:
-              - '**/.github/actions/**/action.yaml'
-              - '**/.github/actions/**/action.yml'
+              - added|modified: '**/.github/actions/**/action.yaml'
+              - added|modified: '**/.github/actions/**/action.yml'
             workflows:
-              - '**/.github/workflows/**/*.yaml'
-              - '**/.github/workflows/**/*.yml'
+              - added|modified: '**/.github/workflows/**/*.yaml'
+              - added|modified: '**/.github/workflows/**/*.yml'
 
       - name: Configure Node
         id: node
@@ -78,9 +78,6 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const ignoredPatternRegexp = {
-              '.github/workflows/validate-github-action-configs.yaml': '\\/jobs\\/validate\\/strategy\\/matrix\\/include: should be array \\(null\\)|\\/jobs\\/validate: should NOT have additional properties \\(runs-on\\)|\\/jobs\\/validate: should match exactly one schema in oneOf \\(null\\)'
-            };
             const yaml = require('yaml');
             const fs = require('fs');
             async function getName(filepath) {
@@ -94,21 +91,19 @@ jobs:
               list.push({
                 file: item, 
                 type: 'workflow', 
-                name: await getName(item), 
-                ignoredPatternRegexp: item in ignoredPatternRegexp ? ignoredPatternRegexp[item] : null
+                name: await getName(item),
               });
             }
             for (const item of JSON.parse('${{ steps.changes.outputs.actions_files }}')) {
               list.push({
                 file: item, 
                 type: 'action', 
-                name: await getName(item), 
-                ignoredPatternRegexp: item in ignoredPatternRegexp ? ignoredPatternRegexp[item] : null
+                name: await getName(item),
               });
             }
 
             return list;
-          
+  
 
   validate:
     name: "\"${{ matrix.name || matrix.file }}\" ${{ matrix.type }}"
@@ -128,4 +123,3 @@ jobs:
         with:
           file: ${{ matrix.file }}
           type: ${{ matrix.type }}
-          ignoredPatternRegexp: ${{ matrix.ignoredPatternRegexp }}

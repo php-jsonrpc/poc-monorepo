@@ -42,11 +42,7 @@ class PackageHelper
     }
 
     /**
-     * If package state is "Unknown",
-     * @param Package $package
-     * @param string  $baseReference
-     *
-     * @return PackageState
+     * Resolved package state in case it is "Unknown", and return current package state in any cases
      */
     public function resolveState(Package $package, string $baseReference): PackageState {
         if ($package->state === PackageState::Unknown) {

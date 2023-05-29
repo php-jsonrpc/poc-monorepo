@@ -9,11 +9,6 @@ inputs:
     description: 'Either "workflow" or "action". Default to "workflow"'
     required: false
     default: 'workflow'
-  ignoredPatternRegexp:
-    description: 'Regexp excluding errors'
-    required: false
-    default: 'workflow'
-
 
 runs:
   using: composite
