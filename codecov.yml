@@ -1,3 +1,6 @@
+codecov:
+  bot: "codecov-io"
+
 coverage:
   range: "80...100"
 
@@ -24,8 +27,8 @@ component_management:
       name: php-jsonrpc/poc-monorepo-pkg1
       paths:
         - packages/scope1/**
-    - component_id: module_core
-      name: core
+    - component_id: macrorepo
+      name: macrorepo
       paths:
         - builder/**
       statuses: # the core component has its own statuses
