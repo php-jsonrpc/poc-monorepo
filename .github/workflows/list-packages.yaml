@@ -30,6 +30,8 @@ on:
         description: List of updated packages
         value: ${{ jobs.main.outputs.updated_packages }}
 
+permissions: {}
+
 jobs:
   main:
     name: Find${{ inputs.updated_only && ' updated' || '' }} known packages
