@@ -39,6 +39,7 @@ jobs:
       - name: Update target branch
         run: |
           git fetch origin -v # Re-fetch target branch to retrieve all refs
+          git checkout ${{ inputs.base }} # Checkout base branch
           git checkout ${{ inputs.target }} # Move to target branch
           git status
           git pull origin ${{ inputs.base }}
