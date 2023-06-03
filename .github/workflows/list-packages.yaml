@@ -46,56 +46,22 @@ jobs:
 
       - name: Generate list
         id: list-generator
-        shell: bash
-        # Do not run command inside a $(...) clause, else errors won't be caught !
-        run: |
-          ./vendor/bin/monorepo-builder packages:list --all-fields --json | tee list.json 
-          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
-
-      - name: Generate path list
-        id: path_list
-        shell: bash
-        # Do not run command inside a $(...) clause, else errors won't be caught !
-        run: |
-          echo '${{ steps.list-generator.outputs.list }}' | \
-            jq -r -M 'map("            \(.name):\n              - added|modified: '"'"'\(.path)/**'"'"'") | add' | \
-            tee filters.txt
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "filters<<$EOF" >> "$GITHUB_OUTPUT"
-          cat filters.txt >> "$GITHUB_OUTPUT"
-          echo "$EOF" >> "$GITHUB_OUTPUT"
-
-      - name: Find updated packages
-        uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          list-files: json
-          filters: ${{ steps.path_list.outputs.filters }}
-
-      - name: Generate extra params pattern
-        id: extra-params-pattern
-        shell: bash
-        # Do not run command inside a $(...) clause, else errors won't be caught !
-        run: |
-          echo "${{ inputs.split-branch-pattern && format(', \"split_branch\": \"{0}\"', inputs.split-branch-pattern) || '' }}" | tee list.json 
-          echo "extra=$(cat list.json)" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/list-packages
 
       - name: Re-enerate packages list
         id: enhanced-list-generator
-        shell: bash
-        # Do not run command inside a $(...) clause, else errors won't be caught !
-        run: |
-          echo '[${{ steps.list-generator.outputs.list }},${{ steps.changes.outputs.changes }}]' | \
-            jq -r -M '.[1] as $list | .[0] | map({ "\(.name)": (. + { "state": (.name as $name | if $list | contains([$name]) then "updated" else "none" end )${{ steps.extra-params-pattern.outputs.extra }} } ) }) | add | tostring' | \
-            tee list.json 
-          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/resolve-packages-state
+        with:
+          list: ${{ steps.list-generator.outputs.list }}
 
       - name: Generate updated packages list
         id: updated-packages-list-generator
         shell: bash
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
+          # Generate updated packages list
           echo '${{ steps.enhanced-list-generator.outputs.list }}' | \
             jq -c -M 'map(select(.state == "updated")) | map(.name)' | \
-            tee list.json 
+            > list.json
+          cat list.json | jq
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
