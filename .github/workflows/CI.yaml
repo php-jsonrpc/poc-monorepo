@@ -1,13 +1,6 @@
 name: 'CI'
 on: # Build any PRs and main branch changes
   workflow_dispatch: # Allows to run the workflow manually from the Actions tab
-    commit_sha:
-      description: 'Git commit sha to verify'
-      required: true
-    base_branch:
-      description: 'Git base branch for the comparison'
-      required: true
-      default: 'origin/develop'
   pull_request:
     types:
       - opened
@@ -22,10 +15,6 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
   cancel-in-progress: true
 
-env:
-  head_ref: ${{ github.event.pull_request.head.ref || github.event.head_ref || github.head_ref || github.ref }}
-  base_ref: ${{ github.event.pull_request.base.ref || github.event.base_ref || github.base_ref || github.ref }}
-
 defaults:
   run:
     shell: bash
@@ -37,8 +26,7 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      # Copy of env.base_ref as `env` is not managed in that property
-      state_from: ${{ github.event.pull_request.base.ref || github.event.base_ref || github.base_ref || github.ref }}
+      state_from: ${{ github.base_ref || github.ref }}
 
   package-CI:
     name: ${{ matrix.pkg_name }}
