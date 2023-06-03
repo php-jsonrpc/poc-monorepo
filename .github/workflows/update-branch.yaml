@@ -30,8 +30,8 @@ jobs:
       - name: Initialize target branch
         run: |
           git fetch origin ${{ inputs.target }} -v && exit 0 # Exit early if branch already exists
-          git fetch origin -v
-          git branch -c origin/${{ inputs.base }} ${{ inputs.target }}
+          git fetch origin ${{ inputs.base }} -v
+          git branch -c ${{ inputs.base }} ${{ inputs.target }}
           git push origin ${{ inputs.target }}
           echo '> ℹ️ Branch `${{ inputs.target }}` created from `origin/${{ inputs.base }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
 
