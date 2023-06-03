@@ -23,7 +23,6 @@ jobs:
 
   main:
     name: ${{ matrix.name }}
-    runs-on: ubuntu-latest
     if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     needs: [ metadata ]
     strategy:
