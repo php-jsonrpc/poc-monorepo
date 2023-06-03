@@ -31,7 +31,7 @@ jobs:
         run: |
           git fetch origin ${{ inputs.target }} && exit 0 # Exit early if branch already exists
           git fetch origin ${{ inputs.base }}
-          git checkout --track origin/${{ inputs.base }} -b ${{ inputs.target }}
+          git checkout --track remotes/origin/${{ inputs.base }} -b ${{ inputs.target }}
           git push origin ${{ inputs.target }}
           echo "::notice ::Branch ${{ inputs.target }} created and synchronized with origin"
 
