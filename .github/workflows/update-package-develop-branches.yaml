@@ -1,5 +1,10 @@
 name: Update package develop branches
 on:
+  pull_request: # TO DELETE - only for tests
+    types:
+      - opened
+      - edited
+      - synchronize
   push:
     branches: [ develop ]
 
