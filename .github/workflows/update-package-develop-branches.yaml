@@ -18,7 +18,6 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      state_from: ${{ github.base_ref || github.ref_name }}
       split-branch-pattern: 'tmp-test-split/%1$s/develop'
 
   main:
