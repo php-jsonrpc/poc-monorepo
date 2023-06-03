@@ -61,7 +61,7 @@ jobs:
         run: |
           # Append packages split branch
           echo '${{ steps.enhanced-list-generator.outputs.list }}' | \
-            jq -r -M 'map(. + { "split_branch": ${{ inputs.split-branch-pattern }} } ) | tostring' \
+            jq -r -M 'map(. + { "split_branch": ${{ toJson(inputs.split-branch-pattern) }} } ) | tostring' \
             > list.json
           cat list.json | jq
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
