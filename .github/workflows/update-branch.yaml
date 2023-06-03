@@ -37,6 +37,7 @@ jobs:
 
       - name: Update target branch
         run: |
+          git branch -d ${{ inputs.base }} || echo "Branch ${{ inputs.base }} doesn't exist" # Remove local base branch if it exists (mostly for push events)
           git fetch origin ${{ inputs.base }} # Re-fetch base branch to retrieve all refs
           git fetch origin ${{ inputs.target }} # Re-fetch target branch to retrieve all refs
           git checkout --track origin/${{ inputs.base }}
