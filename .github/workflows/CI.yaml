@@ -25,8 +25,6 @@ jobs:
   metadata:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
-    with:
-      state_from: ${{ github.base_ref || github.ref_name }}
 
   package-CI:
     name: ${{ matrix.pkg_name }}

@@ -5,7 +5,7 @@ on:
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.head_ref || github.ref_name }}"
-  cancel-in-progress: true
+  cancel-in-progress: false # false => wait previous workflow execution before starting
 
 defaults:
   run:
@@ -18,8 +18,7 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      state_from: ${{ github.base_ref || github.ref_name }}
-      split-branch-pattern: 'tmp-test-split/%1$s/develop'
+      split-branch-pattern: 'tmp-test-split/\\(.name)/develop'
 
   main:
     name: ${{ matrix.name }}
