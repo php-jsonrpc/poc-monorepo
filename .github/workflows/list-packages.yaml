@@ -64,7 +64,7 @@ jobs:
           path: |
             composer.lock
             vendor
-          key: ${{ github.head_ref || github.ref }}-${{ hashFiles('**/composer.json') }}-list-packages-composer
+          key: ${{ github.head_ref || github.ref_name }}-${{ hashFiles('**/composer.json') }}-list-packages-composer
 
       - name: Install macrorepo
         run: make install

@@ -4,7 +4,7 @@ on:
     branches: [ develop ]
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref_name }}"
   cancel-in-progress: true
 
 defaults:
@@ -18,7 +18,7 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      state_from: ${{ github.base_ref || github.ref }}
+      state_from: ${{ github.base_ref || github.ref_name }}
       split-branch-pattern: 'tmp-test-split/%1$s/develop'
 
   main:
