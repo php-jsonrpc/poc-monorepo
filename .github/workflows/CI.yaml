@@ -12,7 +12,7 @@ on: # Build any PRs and main branch changes
     - cron: '0 0 1 * *' # Every month
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref_name }}"
   cancel-in-progress: true
 
 defaults:
@@ -26,7 +26,7 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      state_from: ${{ github.base_ref || github.ref }}
+      state_from: ${{ github.base_ref || github.ref_name }}
 
   package-CI:
     name: ${{ matrix.pkg_name }}
