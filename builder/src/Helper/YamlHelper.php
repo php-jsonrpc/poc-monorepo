@@ -11,21 +11,11 @@ use function sprintf;
 
 class YamlHelper
 {
-    public static function loadFileAsYaml(string $filepath): array
-    {
-        $content = file_get_contents($filepath);
-        if (false === $content) {
-            throw new \Exception('Unable to load the file');
-        }
-
-        return self::loadAsYaml($content);
-    }
-
     public static function loadAsYaml(string $content): array
     {
         $data = Yaml::parse($content);
 
-        if (!is_array($data)) {
+        if (true !== is_array($data)) {
             throw new \Exception(sprintf('Expected an array but got %s', gettype($data)));
         }
 

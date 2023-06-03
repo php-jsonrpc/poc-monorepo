@@ -10,7 +10,7 @@ class BumpHelper
     public static function findRequiredIn(iterable $list): BumpEnum
     {
         $required = BumpEnum::none;
-        foreach($list as $bump) {
+        foreach ($list as $bump) {
             if ($bump->value > $required->value) {
                 $required = $bump;
                 if ($required === BumpEnum::major) {

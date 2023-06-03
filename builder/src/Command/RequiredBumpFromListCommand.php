@@ -21,8 +21,7 @@ class RequiredBumpFromListCommand extends AbstractSymplifyCommand
     {
         $this->setName('version:required-bump')
             ->addArgument('bump', InputArgument::REQUIRED | InputArgument::IS_ARRAY, 'A bump')
-            ->addOption('raw', null, InputOption::VALUE_NONE, 'Output required as raw string')
-        ;
+            ->addOption('raw', null, InputOption::VALUE_NONE, 'Output required as raw string');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -36,7 +35,7 @@ class RequiredBumpFromListCommand extends AbstractSymplifyCommand
             )
         );
 
-        if ($isRawOutput) {
+        if (true === $isRawOutput) {
             $this->symfonyStyle->writeln($requiredBump->name);
         } else {
             $this->symfonyStyle->success(sprintf('%s bump required based on the provided list', $requiredBump === BumpEnum::none ? 'No' : ucfirst($requiredBump->name)));

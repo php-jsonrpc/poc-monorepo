@@ -16,7 +16,8 @@ class Release
     ) {
     }
 
-    public static function fromArray(string $version, array $data): self {
+    public static function fromArray(string $version, array $data): self
+    {
 
         return new self(
             $version,

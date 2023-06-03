@@ -13,7 +13,8 @@ enum BumpEnum: int
     case patch = 1;
     case none = 0;
 
-    public static function fromString(string $value): BumpEnum {
+    public static function fromString(string $value): BumpEnum
+    {
         return match (strtolower($value)) {
             'major' => self::major,
             'minor' => self::minor,

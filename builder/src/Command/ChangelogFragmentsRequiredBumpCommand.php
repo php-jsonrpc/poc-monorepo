@@ -54,8 +54,8 @@ class ChangelogFragmentsRequiredBumpCommand extends AbstractSymplifyCommand
         $finder->in($changelogFragmentsDirectoryPath)
             ->files()->ignoreVCSIgnored(true)
             ->name(['*.yaml', '*.yml'])
-            ->sortByCaseInsensitiveName()
-        ;
+            ->sortByCaseInsensitiveName();
+
         $this->debugMessage(sprintf('Found %d fragments', $finder->count()));
 
         $requiredBump = BumpHelper::findRequiredIn($this->createIterator($finder));
@@ -80,6 +80,7 @@ class ChangelogFragmentsRequiredBumpCommand extends AbstractSymplifyCommand
 
                 return Command::FAILURE;
             }
+
             $fragment = Fragment::fromArray($decoded);
 
             yield $this->guessBump($fragment->changes);

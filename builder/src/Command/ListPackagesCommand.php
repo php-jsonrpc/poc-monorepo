@@ -53,12 +53,12 @@ DOC,
         $updatedOnly = $input->getOption('updated-only');
         $allField = $input->getOption('all-fields');
         $stateFrom = $input->getOption('state-from');
-        /** @var array<int, string> $displayFieldList */
-        $displayFieldList = $allField ? self::FIELD_LIST : $input->getOption('field');
+        /* @var array<int, string> $displayFieldList */
+        $displayFieldList = true === $allField ? self::FIELD_LIST : $input->getOption('field');
         $splitBranchPattern = $input->getOption('split-branch-pattern');
 
         $additionalDisplayFieldList = $input->getOption('with-field');
-        if (!$allField && !empty($additionalDisplayFieldList)) {
+        if (false === $allField && false === empty($additionalDisplayFieldList)) {
             $displayFieldList = array_merge($displayFieldList, $additionalDisplayFieldList);
         }
         if (true === $updatedOnly && null === $stateFrom) {
@@ -102,7 +102,7 @@ DOC,
             );
         } else {
             $this->symfonyStyle->writeln('List of known packages:');
-            $headers = array_map(fn ($field) => ucfirst(str_replace('_', ' ', $field)), $displayFieldList);
+            $headers = array_map(static fn ($field) => ucfirst(str_replace('_', ' ', $field)), $displayFieldList);
             $this->symfonyStyle->table($headers, $packageListInfos);
         }
 
