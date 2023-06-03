@@ -40,10 +40,13 @@ jobs:
         run: |
           git fetch origin -v # Re-fetch target branch to retrieve all refs
           git checkout ${{ inputs.base }} # Checkout base branch
+          echo "${{ inputs.base }} graph:"
           git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
           git checkout ${{ inputs.target }} # Move to target branch
+          echo "${{ inputs.target }} graph:"
           git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
           git reset --hard origin/${{ inputs.target }}
+          echo "Reseted ${{ inputs.target }} graph:"
           git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
           git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
