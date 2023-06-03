@@ -53,7 +53,7 @@ DOC,
         $updatedOnly = $input->getOption('updated-only');
         $allField = $input->getOption('all-fields');
         $stateFrom = $input->getOption('state-from');
-        /* @var array<int, string> $displayFieldList */
+        /** @var array<int, string> $displayFieldList */
         $displayFieldList = true === $allField ? self::FIELD_LIST : $input->getOption('field');
         $splitBranchPattern = $input->getOption('split-branch-pattern');
 
