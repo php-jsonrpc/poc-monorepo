@@ -29,19 +29,16 @@ jobs:
 
       - name: Initialize target branch
         run: |
-          git fetch origin ${{ inputs.target }} && exit 0 # Exit early if branch already exists
-          git fetch origin ${{ inputs.base }}
-          git checkout --track remotes/origin/${{ inputs.base }} -b ${{ inputs.target }}
+          git fetch origin ${{ inputs.target }} -v && exit 0 # Exit early if branch already exists
+          git fetch origin -v
+          git branch -c origin/${{ inputs.base }} ${{ inputs.target }}
           git push origin ${{ inputs.target }}
           echo '> ℹ️ Branch `${{ inputs.target }}` created from `origin/${{ inputs.base }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
 
       - name: Update target branch
         run: |
-          git fetch origin ${{ inputs.target }} --prune -v # Re-fetch target branch to retrieve all refs
+          git fetch origin -v # Re-fetch target branch to retrieve all refs
           git checkout --track origin/${{ inputs.target }} # Move to target branch
-          git branch -D ${{ inputs.base }} || echo "Skipped base branch deletion" # Remove local base branch if it exists (mostly for push events)
-          git fetch origin --prune -v # Re-fetch whole origin (following potential deletion)
-          git rebase origin/${{ inputs.base }}
-          git diff
+          git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
           echo '✅ Branch `${{ inputs.base }}` merged into `${{ inputs.target }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
