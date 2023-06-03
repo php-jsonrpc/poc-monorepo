@@ -10,9 +10,7 @@
         }
     ],
     "require": {
-        "php": "^8.2"
-    },
-    "require-dev": {
+        "php": "^8.2",
         "symfony/console": "^6.2",
         "symfony/dependency-injection": "^6.2",
         "symfony/filesystem": "^6.2",
@@ -22,13 +20,7 @@
     },
     "autoload": {
         "psr-4": {
-            "PhpJsonrpc\\PocMonorepoPkg1\\": "packages/scope1/src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "PhpJsonRpc\\Builder\\": "builder/src",
-            "Symplify\\Tests\\": "tests"
+            "PhpJsonRpc\\Builder\\": "builder/src"
         }
     },
     "config": {
@@ -36,9 +28,6 @@
         "allow-plugins": {
             "phpstan/extension-installer": true
         }
-    },
-    "replace": {
-        "php-jsonrpc/poc-monorepo-pkg1": "0.1-dev"
     },
     "minimum-stability": "stable"
 }

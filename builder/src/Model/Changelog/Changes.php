@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace PhpJsonRpc\Builder\Changelog;
+namespace PhpJsonRpc\Builder\Model\Changelog;
 
 class Changes
 {
@@ -25,7 +25,8 @@ class Changes
     ) {
     }
 
-    public static function fromArray(array $data): self {
+    public static function fromArray(array $data): self
+    {
         $breakingChanges = [];
         $securityFixes = [];
         $majorChanges = [];

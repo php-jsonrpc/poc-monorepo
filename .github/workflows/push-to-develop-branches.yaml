@@ -1,0 +1,56 @@
+name: Push to develop branches
+on:
+  push:
+    branches: [ develop ]
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+permissions: {}
+
+jobs:
+  metadata:
+    name: Metadata
+    uses: ./.github/workflows/list-packages.yaml
+    with:
+      state_from: ${{ github.event.base_ref || github.base_ref || github.ref }}
+      split-branch-pattern: 'tmp-test-split/%1$s/develop'
+
+  push_to_develop:
+    name: Push ${{ matrix.name }} to ${{ matrix.split_branch }}
+    runs-on: ubuntu-latest
+    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
+    needs: [ metadata ]
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include: ${{ fromJson(needs.metadata.outputs.packages).* }}
+    permissions:
+      contents: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Initialize target branch
+        run: |
+          git fetch origin ${{ matrix.split_branch }} && exit 0 # Exit early if branch already exists
+          git fetch origin develop
+          git checkout --track origin/develop -b ${{ matrix.split_branch }}
+          git push origin ${{ matrix.split_branch }}
+          echo "::notice ::Branch ${{ matrix.split_branch }} created and synchronized with origin"
+
+      - name: Check out target branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ matrix.split_branch }}
+
+      - name: Update target branch
+        run: |
+          git pull origin develop
+          git push origin ${{ matrix.split_branch }}
