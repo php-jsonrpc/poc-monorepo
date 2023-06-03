@@ -44,6 +44,5 @@ jobs:
         run: |
           git fetch origin ${{ inputs.base }} # Re-fetch base branch due to refs removal from actions/checkout
           git fetch origin ${{ inputs.target }} # Re-fetch target branch to retrieve all refs
-          git config pull.ff only
           git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
