@@ -33,16 +33,6 @@ runs:
         list-files: json
         filters: ${{ steps.path_list.outputs.filters }}
 
-    - name: Generate extra params pattern
-      id: extra-params-pattern
-      shell: bash
-      # Do not run command inside a $(...) clause, else errors won't be caught !
-      run: |
-        # Generate extra params pattern
-        echo "${{ inputs.split-branch-pattern && format(', \"split_branch\": \"{0}\"', inputs.split-branch-pattern) || '' }}" > extra.txt
-        cat extra.txt
-        echo "extra=$(cat extra.txt)" >> $GITHUB_OUTPUT
-
     - name: Re-enerate packages list
       id: list-generator
       shell: bash
@@ -50,7 +40,7 @@ runs:
       run: |
         # Re-enerate packages list
         echo '[${{ inputs.list }},${{ steps.changes.outputs.changes }}]' | \
-          jq -r -M '.[1] as $list | .[0] | map({ "\(.name)": (. + { "state": (.name as $name | if $list | contains([$name]) then "updated" else "none" end )${{ steps.extra-params-pattern.outputs.extra }} } ) }) | add | tostring' \
+          jq -r -M '.[1] as $list | .[0] | map({ "\(.name)": (. + { "state": (.name as $name | if $list | contains([$name]) then "updated" else "none" end ) } ) }) | add | tostring' \
           > list.json
         cat list.json | jq
         echo "list=$(cat list.json)" >> $GITHUB_OUTPUT

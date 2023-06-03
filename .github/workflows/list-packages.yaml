@@ -3,10 +3,9 @@ on:
   workflow_call:
     inputs:
       split-branch-pattern:
-        description: 'Split branch pattern'
+        description: 'Split branch pattern to append for each package'
         type: string
         required: false
-        default: "split/\\(.name)/develop"
     outputs:
       packages:
         description: List of packages
@@ -22,7 +21,7 @@ jobs:
     name: Packages
     runs-on: ubuntu-latest
     outputs:
-      packages: ${{ steps.enhanced-list-generator.outputs.list }}
+      packages: ${{ inputs.split-branch-pattern != '' && steps.list-with-split-branch-generator.outputs.list || steps.enhanced-list-generator.outputs.list }}
       updated_package_names: ${{ steps.updated-packages-list-generator.outputs.list }}
     steps:
       - name: Check out code
@@ -48,11 +47,24 @@ jobs:
         id: list-generator
         uses: ./.github/actions/list-packages
 
-      - name: Re-enerate packages list
+      - name: Resolve packages state
         id: enhanced-list-generator
         uses: ./.github/actions/resolve-packages-state
         with:
           list: ${{ steps.list-generator.outputs.list }}
+
+      - name: Append packages split branch
+        id: list-with-split-branch-generator
+        if: ${{ inputs.split-branch-pattern != '' }}
+        shell: bash
+        # Do not run command inside a $(...) clause, else errors won't be caught !
+        run: |
+          # Append packages split branch
+          echo '${{ inputs.list }}' | \
+            jq -r -M 'map(. + { "split_branch": ${{ inputs.split-branch-pattern }} } ) | tostring' \
+            > list.json
+          cat list.json | jq
+          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
 
       - name: Generate updated packages list
         id: updated-packages-list-generator
