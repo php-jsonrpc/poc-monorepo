@@ -38,9 +38,9 @@ jobs:
 
       - name: Update target branch
         run: |
-          git fetch origin ${{ inputs.base }} -v # Re-fetch target branch to retrieve all refs
+          git fetch origin ${{ inputs.base }} -v # Re-fetch base branch to retrieve all refs
           git checkout ${{ inputs.base }} # Checkout base branch
-          git fetch --unshallow # Ensure branch has the whole git history
+          git fetch --unshallow # Ensure branch has the whole git history (else 'git pull' won't work)
           git checkout ${{ inputs.target }} # Move to target branch
           git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
