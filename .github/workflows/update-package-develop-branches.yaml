@@ -18,7 +18,7 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      split-branch-pattern: 'tmp-test-split/\\(.name)/develop'
+      split-branch-pattern: 'tmp-test-split/\(.name)/develop'
 
   main:
     name: ${{ matrix.name }}
