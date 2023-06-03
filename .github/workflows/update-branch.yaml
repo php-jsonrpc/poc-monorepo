@@ -33,7 +33,7 @@ jobs:
           git fetch origin ${{ inputs.base }}
           git checkout --track remotes/origin/${{ inputs.base }} -b ${{ inputs.target }}
           git push origin ${{ inputs.target }}
-          echo "::notice ::Branch ${{ inputs.target }} created and synchronized with origin"
+          echo '> ℹ️ Branch `${{ inputs.target }}` created from `origin/${{ inputs.base }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
 
       - name: Check out target branch
         uses: actions/checkout@v3
@@ -47,3 +47,4 @@ jobs:
           git status
           git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
+          echo '✅ Branch `${{ inputs.base }}` merged into `${{ inputs.target }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
