@@ -42,5 +42,6 @@ jobs:
 
       - name: Update target branch
         run: |
-          git rebase origin/${{ inputs.base }}
+          git config pull.ff only
+          git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
