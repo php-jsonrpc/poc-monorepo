@@ -42,5 +42,6 @@ jobs:
           git branch -D ${{ inputs.base }} || echo "Skipped base branch deletion" # Remove local base branch if it exists (mostly for push events)
           git fetch origin --prune -v # Re-fetch whole origin (following potential deletion)
           git reset origin/${{ inputs.base }}
+          git diff
           git push origin ${{ inputs.target }}
           echo '✅ Branch `${{ inputs.base }}` merged into `${{ inputs.target }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
