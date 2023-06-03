@@ -1,4 +1,4 @@
-title: Project
+title: php-jsonrpc/poc-monorepo-pkg1
 changelog_filename_template: ./CHANGELOG.rst
 changelog_filename_version_depth: 2
 changes_file: changelog.yaml
