@@ -44,6 +44,8 @@ jobs:
           git fetch origin -v # Re-fetch target branch to retrieve all refs
           git checkout ${{ inputs.base }} # Checkout base branch
           echo "${{ inputs.base }} graph: $(git log --graph)"
+          git reset --hard origin/${{ inputs.base }}
+          echo "RESETED ${{ inputs.base }} graph: $(git log --graph)"
           git checkout ${{ inputs.target }} # Move to target branch
           echo "${{ inputs.target }} graph: $(git log --graph)"
           git reset --hard origin/${{ inputs.target }}
