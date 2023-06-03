@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace PhpJsonRpc\Builder\Helper;
 
-use PhpJsonRpc\Builder\Model\Package\Package;
-use PhpJsonRpc\Builder\Model\Package\State;
-use Symfony\Component\Process\Process;
+use PhpJsonRpc\Builder\Model\Package;
 use Symplify\MonorepoBuilder\ComposerJsonManipulator\FileSystem\JsonFileManager;
 use Symplify\MonorepoBuilder\FileSystem\ComposerJsonProvider;
 
@@ -39,18 +37,5 @@ class PackageHelper
         } else {
             return new \ArrayIterator($this->cache);
         }
-    }
-
-    /**
-     * Resolved package state in case it is "Unknown", and return current package state in any cases
-     */
-    public function resolveState(Package $package, string $baseReference): State {
-        if ($package->state === State::Unknown) {
-            $process = new Process(['git', 'diff', $baseReference, '--name-only', '--', $package->path]);
-            $process->mustRun();
-            $package->state = false === empty(trim($process->getOutput())) ? State::Updated : State::None;
-        }
-
-        return $package->state;
     }
 }
