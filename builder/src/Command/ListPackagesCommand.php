@@ -15,7 +15,7 @@ use function str_replace;
 
 class ListPackagesCommand extends AbstractSymplifyCommand
 {
-    const FIELD_LIST = ['name', 'path', 'state', 'vendor', 'short_name', 'split_branch'];
+    const FIELD_LIST = ['name', 'path', 'vendor', 'short_name'];
 
     public function __construct(
         private readonly PackageHelper $packageHelper,
@@ -30,18 +30,7 @@ class ListPackagesCommand extends AbstractSymplifyCommand
             ->addOption('all-fields', null, InputOption::VALUE_NONE, 'Display all available fields. Default to "field" option value.')
             ->addOption('json', null, InputOption::VALUE_NONE, 'Output the list as JSON object')
             ->addOption('field', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Fields to display, vendor, name and path by default', ['name', 'path'])
-            ->addOption('with-field', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List of fields to append to registered ones', [])
-            ->addOption(
-                'split-branch-pattern',
-                null,
-                InputOption::VALUE_REQUIRED,
-                <<<DOC
-Split branch pattern
-Generate the branch name to use when splitting macrorepo to package branches.
-Parameters: 1=name, 2=vendor, 3=short_name
-DOC,
-                'split/%1$s/develop'
-            );
+            ->addOption('with-field', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'List of fields to append to registered ones', []);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -49,7 +38,6 @@ DOC,
         $allField = $input->getOption('all-fields');
         /** @var array<int, string> $displayFieldList */
         $displayFieldList = true === $allField ? self::FIELD_LIST : $input->getOption('field');
-        $splitBranchPattern = $input->getOption('split-branch-pattern');
 
         $additionalDisplayFieldList = $input->getOption('with-field');
         if (false === $allField && false === empty($additionalDisplayFieldList)) {
@@ -61,18 +49,12 @@ DOC,
             [$vendor, $shortName] = explode('/', $package->name);
             $packageListInfos[$package->name] = array_reduce(
                 $displayFieldList,
-                function (array $carry, string $field) use ($package, $vendor, $shortName, $splitBranchPattern): array {
+                function (array $carry, string $field) use ($package, $vendor, $shortName): array {
                     $carry[$field] = match ($field) {
                         'vendor' => $vendor,
                         'name' => $package->name,
                         'short_name' => $shortName,
                         'path' => $package->path,
-                        'split_branch' => sprintf(
-                            $splitBranchPattern,
-                            $package->name,
-                            $vendor,
-                            $shortName
-                        ),
                         default => throw new Exception(sprintf('Unknown field "%s"', $field))
                     };
 

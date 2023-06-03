@@ -6,13 +6,14 @@ on:
         description: 'Split branch pattern'
         type: string
         required: false
+        default: "split/\\(.name)/develop"
     outputs:
       packages:
         description: List of packages
-        value: ${{ jobs.enhance.outputs.packages }}
+        value: ${{ jobs.packages.outputs.packages }}
       updated_packages:
         description: List of updated package names
-        value: ${{ jobs.enhance.outputs.updated_package_names }}
+        value: ${{ jobs.packages.outputs.updated_package_names }}
 
 permissions: {}
 
@@ -21,7 +22,8 @@ jobs:
     name: Packages
     runs-on: ubuntu-latest
     outputs:
-      packages: ${{ steps.list-generator.outputs.list }}
+      packages: ${{ steps.enhanced-list-generator.outputs.list }}
+      updated_package_names: ${{ steps.updated-packages-list-generator.outputs.list }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -47,26 +49,15 @@ jobs:
         shell: bash
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
-          ./vendor/bin/monorepo-builder packages:list \
-            --all-fields \
-            ${{ inputs.split-branch-pattern && format('--split-branch-pattern=''{0}''', inputs.split-branch-pattern) || '' }} \
-            --json | tee list.json 
+          ./vendor/bin/monorepo-builder packages:list --all-fields --json | tee list.json 
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
 
-  enhance:
-    name: Enhance
-    needs: [packages]
-    runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.list-generator.outputs.list }}
-      updated_package_names: ${{ steps.updated-packages-list-generator.outputs.list }}
-    steps:
       - name: Generate path list
         id: path_list
         shell: bash
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
-          echo '${{ needs.packages.outputs.packages }}' | \
+          echo '${{ steps.list-generator.outputs.list }}' | \
             jq -r -M 'map("            \(.name):\n              - added|modified: '"'"'\(.path)/**'"'"'") | add' | \
             tee filters.txt
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
@@ -81,13 +72,21 @@ jobs:
           list-files: json
           filters: ${{ steps.path_list.outputs.filters }}
 
-      - name: Re-enerate packages list
-        id: list-generator
+      - name: Generate extra params pattern
+        id: extra-params-pattern
         shell: bash
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
-          echo '[${{ needs.packages.outputs.packages }},${{ steps.changes.outputs.changes }}]' | \
-            jq -r -M '.[1] as $list | .[0] | map({ "\(.name)": (. + { "state": (.name as $name | if $list | contains([$name]) then "updated" else "none" end ) } ) }) | add | tostring' | \
+          echo "${{ inputs.split-branch-pattern && format(', \"split_branch\": \"{0}\"', inputs.split-branch-pattern) || '' }}" | tee list.json 
+          echo "extra=$(cat list.json)" >> $GITHUB_OUTPUT
+
+      - name: Re-enerate packages list
+        id: enhanced-list-generator
+        shell: bash
+        # Do not run command inside a $(...) clause, else errors won't be caught !
+        run: |
+          echo '[${{ steps.list-generator.outputs.list }},${{ steps.changes.outputs.changes }}]' | \
+            jq -r -M '.[1] as $list | .[0] | map({ "\(.name)": (. + { "state": (.name as $name | if $list | contains([$name]) then "updated" else "none" end )${{ steps.extra-params-pattern.outputs.extra }} } ) }) | add | tostring' | \
             tee list.json 
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
 
@@ -96,7 +95,7 @@ jobs:
         shell: bash
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
-          echo '${{ steps.list-generator.outputs.list }}' | \
+          echo '${{ steps.enhanced-list-generator.outputs.list }}' | \
             jq -c -M 'map(select(.state == "updated")) | map(.name)' | \
             tee list.json 
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
