@@ -37,21 +37,18 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
     with:
-      # Copy of env.base_ref as `env` is not managed in those properties
+      # Copy of env.base_ref as `env` is not managed in that property
       state_from: ${{ github.event.pull_request.base.ref || github.event.base_ref || github.base_ref || github.ref }}
 
-  updated_packages-CI:
-    # Use matrix.fake_job_suffix in order to have the same job name for every package
-    # and be able to require only one job on branch protection side
-    name: UTs & FTs updated package${{ matrix.fake_job_suffix }}
-    if: ${{ needs.metadata.outputs.updated_package_names != '[]' && needs.metadata.outputs.updated_package_names != '' }}
+  package-CI:
+    name: ${{ matrix.pkg_name }}
+    if: ${{ needs.metadata.outputs.updated_packages != '[]' && needs.metadata.outputs.updated_packages != '' }}
     needs: [ metadata ]
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        fake_job_suffix: ['']
-        pkg_name: ${{ fromJson(needs.metadata.outputs.updated_package_names) }}
+        pkg_name: ${{ fromJson(needs.metadata.outputs.updated_packages) }}
     uses: ./.github/workflows/php-package-CI.yaml
     with:
       path: ${{ fromJson(needs.metadata.outputs.packages)[matrix.pkg_name].path }}

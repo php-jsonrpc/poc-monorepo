@@ -14,14 +14,12 @@ on:
         required: false
 
 env:
-  package_path: ${{ inputs.path }}
-  absolute_package_path: ${{ github.workspace }}/${{ inputs.path || '.' }}
+  package_path: ${{ inputs.path || '.' }}
+  absolute_package_path: ${{ github.workspace }}${{ inputs.path && format('/{0}', inputs.path) || '' }}
   is_macrorepo: ${{ inputs.path != '' }}
   head_ref: ${{ github.head_ref || github.ref }}
   TEST_OUTPUT_STYLE: pretty
   COMPOSER_OPTIONS: --optimize-autoloader
-  CODACY_CACHE_PATH: ~/.cache/codacy
-  CODACY_BIN: ~/.cache/codacy/codacy.sh
 
 defaults:
   run:
