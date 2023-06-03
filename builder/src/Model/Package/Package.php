@@ -7,7 +7,7 @@ use MonorepoBuilderPrefix202304\Symplify\SmartFileSystem\SmartFileInfo;
 
 class Package
 {
-    public PackageState $state = PackageState::Unknown;
+    public State $state = State::Unknown;
     public readonly string $path;
 
     public function __construct(

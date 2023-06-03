@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace PhpJsonRpc\Builder\Model\Package;
 
-enum PackageState: string
+enum State: string
 {
      case Unknown = 'unknown';
      case None = 'none';

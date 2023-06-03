@@ -8,8 +8,8 @@ use MonorepoBuilderPrefix202304\Symfony\Component\Console\Input\InputInterface;
 use MonorepoBuilderPrefix202304\Symfony\Component\Console\Output\OutputInterface;
 use MonorepoBuilderPrefix202304\Symplify\PackageBuilder\Console\Command\AbstractSymplifyCommand;
 use PhpJsonRpc\Builder\Helper\PackageHelper;
-use PhpJsonRpc\Builder\Model\Package;
-use PhpJsonRpc\Builder\Model\PackageState;
+use PhpJsonRpc\Builder\Model\Package\Package;
+use PhpJsonRpc\Builder\Model\Package\State;
 use MonorepoBuilderPrefix202304\Symfony\Component\Console\Command\Command;
 use MonorepoBuilderPrefix202304\Symfony\Component\Console\Input\InputOption;
 use function explode;
@@ -128,7 +128,7 @@ DOC,
         if (true === $updatedOnly) {
             $packageIterator = new \CallbackFilterIterator(
                 $packageIterator,
-                fn(Package $package) => $package->state === PackageState::Updated
+                fn(Package $package) => $package->state === State::Updated
             );
         }
 
