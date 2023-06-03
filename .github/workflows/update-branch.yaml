@@ -40,10 +40,10 @@ jobs:
           git fetch origin ${{ inputs.target }} --prune -v # Re-fetch target branch to retrieve all refs
           git checkout --track origin/${{ inputs.target }} # Move to target branch
           git branch -D ${{ inputs.base }} || echo "Skipped base branch deletion" # Remove local base branch if it exists (mostly for push events)
-          git fetch origin ${{ inputs.base }} --prune -v # Re-fetch base branch (following potential deletion)
+          git fetch origin --prune -v # Re-fetch base branch (following potential deletion)
           git checkout --track origin/${{ inputs.base }} # Create base branch (to retrieve right ref)
           git fetch origin ${{ inputs.base }} --prune -v # Re-fetch base branch to retrieve all refs
           git checkout ${{ inputs.target }} # Move back to target branch
-          git pull ${{ inputs.base }}
+          git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
           echo '✅ Branch `${{ inputs.base }}` merged into `${{ inputs.target }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
