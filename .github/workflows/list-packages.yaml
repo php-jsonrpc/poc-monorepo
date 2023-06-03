@@ -60,7 +60,7 @@ jobs:
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
           # Append packages split branch
-          echo '${{ inputs.list }}' | \
+          echo '${{ steps.enhanced-list-generator.outputs.list }}' | \
             jq -r -M 'map(. + { "split_branch": ${{ inputs.split-branch-pattern }} } ) | tostring' \
             > list.json
           cat list.json | jq
