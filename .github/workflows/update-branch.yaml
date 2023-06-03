@@ -37,11 +37,10 @@ jobs:
 
       - name: Update target branch
         run: |
-          git branch -d ${{ inputs.base }} || echo "Branch ${{ inputs.base }} doesn't exist" # Remove local base branch if it exists (mostly for push events)
-          git fetch origin ${{ inputs.base }} # Re-fetch base branch to retrieve all refs
           git fetch origin ${{ inputs.target }} # Re-fetch target branch to retrieve all refs
-          git checkout --track origin/${{ inputs.base }}
-          git checkout --track origin/${{ inputs.target }}
+          git checkout --track origin/${{ inputs.target }} # Move to target branch
+          git branch -d ${{ inputs.base }} || echo "Nevermind" # Remove local base branch if it exists (mostly for push events)
+          git fetch origin ${{ inputs.base }} # Re-fetch base branch to retrieve all refs
           git pull origin ${{ inputs.base }}
           git push origin ${{ inputs.target }}
           echo '✅ Branch `${{ inputs.base }}` merged into `${{ inputs.target }}` and synchronized with `origin`' >> $GITHUB_STEP_SUMMARY
