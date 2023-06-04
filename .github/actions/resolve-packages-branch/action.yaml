@@ -27,7 +27,7 @@ runs:
         # Enhance list
         echo '${{ inputs.list }}' | \
           jq -r -M ' 
-            map( 
+            map(
               "split/\(.name)/" as $prefix | 
               .current_branch="develop"  | 
               .target_branch=(
