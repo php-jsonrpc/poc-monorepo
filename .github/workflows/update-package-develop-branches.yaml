@@ -25,8 +25,8 @@ jobs:
     if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     runs-on: ubuntu-latest
     outputs:
-      ${{ matrix.name }}_head: develop
-      ${{ matrix.name }}_base: ${{ steps.base-generator.outputs.branch }}
+      head_base: develop
+      base_base: ${{ steps.base-generator.outputs.branch }}
     matrix:
       include: ${{ fromJson(needs.metadata.outputs.packages).* }}
     steps:
@@ -37,10 +37,19 @@ jobs:
           pkg_name: ${{ matrix.name }}
           pkg_branch: develop
 
+  DEBUG:
+    name: DEBUG
+    needs: [ metadata, branches-metadata ]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "${{ needs.metadata.outputs.packages }}"
+          echo "${{ toJson(needs.branches-metadata.outputs) }}"
+
   main:
     name: ${{ matrix.name }}
     needs: [ metadata, branches-metadata ]
-    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
+    if: ${{ false && needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
