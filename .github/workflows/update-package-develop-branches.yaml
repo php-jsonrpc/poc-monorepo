@@ -20,20 +20,8 @@ jobs:
   metadata:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
-
-  branches-metadata:
-    name: Package branches
-    needs: [ metadata ]
-    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
-    runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.generator.outputs.packages }}
-    steps:
-      - name: Resolve
-        id: generator
-        uses: ./.github/actions/resolve-packages-branch
-        with:
-          list: ${{ steps.metadata.outputs.packages }}
+    with:
+      resolve-branches: true
 
   main:
     name: ${{ matrix.name }}

@@ -7,6 +7,11 @@ on:
         type: boolean
         required: false
         default: false
+      resolve-branches:
+        description: 'Weither to resolve each package branches or not'
+        type: boolean
+        required: false
+        default: false
     outputs:
       packages:
         description: List of packages
@@ -22,8 +27,8 @@ jobs:
     name: Packages
     runs-on: ubuntu-latest
     outputs:
-      packages: ${{ inputs.resolve-state && steps.enhanced-list-generator.outputs.list || steps.list-generator.outputs.list }}
-      updated_package_names: ${{ inputs.resolve-state && steps.updated-packages-list-generator.outputs.list || '[]' }}
+      packages: ${{ steps.list-with-branches-generator.outputs.list || steps.list-with-state-generator.outputs.list || steps.list-generator.outputs.list }}
+      updated_package_names: ${{ steps.updated-packages-list-generator.outputs.list || '[]' }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -53,7 +58,7 @@ jobs:
 
       - name: Resolve packages state
         if: ${{ inputs.resolve-state }}
-        id: enhanced-list-generator
+        id: list-with-state-generator
         uses: ./.github/actions/resolve-packages-state
         with:
           list: ${{ steps.list-generator.outputs.list }}
@@ -65,8 +70,15 @@ jobs:
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
           # Generate updated packages list
-          echo '${{ steps.enhanced-list-generator.outputs.list }}' | \
+          echo '${{ steps.list-with-state-generator.outputs.list }}' | \
             jq -c -M 'map(select(.updated == true)) | map(.name)' \
             > list.json
           cat list.json | jq
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+
+      - name: Resolve branches
+        if: ${{ inputs.resolve-branches }}
+        id: list-with-branches-generator
+        uses: ./.github/actions/resolve-packages-branch
+        with:
+          list: ${{ steps.list-with-state-generator.outputs.list || steps.list-generator.outputs.list }}
