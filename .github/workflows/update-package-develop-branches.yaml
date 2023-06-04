@@ -5,7 +5,7 @@ on:
     branches: [ develop ]
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.head_ref || github.ref_name }}"
+  group: "${{ github.workflow }}-${{ github.ref_name }}"
   cancel-in-progress: false # false => wait previous workflow execution before starting
 
 defaults:
@@ -19,10 +19,28 @@ jobs:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
 
+  branches-metadata:
+    name: Package split branches
+    needs: [ metadata ]
+    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      ${{ matrix.name }}_head: develop
+      ${{ matrix.name }}_base: ${{ steps.base-generator.outputs.branch }}
+    matrix:
+      include: ${{ fromJson(needs.metadata.outputs.packages).* }}
+    steps:
+      - name: Generate base branch
+        id: base-generator
+        uses: ./.github/actions/generate-package-split-branch
+        with:
+          pkg_name: ${{ matrix.name }}
+          pkg_branch: develop
+
   main:
     name: ${{ matrix.name }}
+    needs: [ metadata, branches-metadata ]
     if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
-    needs: [ metadata ]
     strategy:
       fail-fast: false
       max-parallel: 4
@@ -32,5 +50,5 @@ jobs:
       contents: write
     uses: ./.github/workflows/update-branch.yaml
     with:
-      head: develop
-      base: tmp-test-split/${{ matrix.name }}/develop
+      head: ${{ needs.branches-metadata.outputs[format('{0}_head', matrix.name)] }}
+      base: ${{ needs.branches-metadata.outputs[format('{0}_base', matrix.name)] }}
