@@ -31,6 +31,11 @@ jobs:
       - name: Checkout ${{ matrix.pkg_name }}
         uses: actions/checkout@v3
 
+      - name: Initialize cache directory
+        run: |
+          mkdir -p ${{ github.workspace }}/cache
+          echo "{}" > ${{ github.workspace }}/cache/package-lock.json
+
       - name: Configure Node
         id: node
         uses: actions/setup-node@v3
@@ -39,25 +44,6 @@ jobs:
           check-latest: true
           cache: npm
           cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
-
-      - name: Setup cache
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ github.workspace }}/cache/github-action.json-schema.json
-            ${{ github.workspace }}/cache/github-workflow.json-schema.json
-            ${{ github.workspace }}/cache/draft-07.json-schema.json
-          key: validate-github-action-config-schema-cache
-
-      - name: Create cache directory
-        if: ${{ !steps.cache.output.hit }}
-        run: |
-          mkdir -p ${{ github.workspace }}/cache
-          echo "{}" > ${{ github.workspace }}/cache/package-lock.json
-          wget https://json.schemastore.org/github-action.json -O ${{ github.workspace }}/cache/github-action.json-schema.json
-          wget https://json.schemastore.org/github-workflow.json -O ${{ github.workspace }}/cache/github-workflow.json-schema.json
-          wget http://json-schema.org/draft-07/schema -O ${{ github.workspace }}/cache/draft-07.json-schema.json
 
       - uses: dorny/paths-filter@v2
         id: changes
@@ -121,6 +107,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Initialize cache directory
+        run: |
+          mkdir -p ${{ github.workspace }}/cache
+          echo "{}" > ${{ github.workspace }}/cache/package-lock.json
+
+      - name: Setup cache
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ github.workspace }}/cache/github-action.json-schema.json
+            ${{ github.workspace }}/cache/github-workflow.json-schema.json
+            ${{ github.workspace }}/cache/draft-07.json-schema.json
+          key: validate-github-action-config-schema-cache
+
+      - name: Download JSON schemas
+        if: ${{ !steps.cache.output.hit }}
+        run: |
+          wget https://json.schemastore.org/github-action.json -O ${{ github.workspace }}/cache/github-action.json-schema.json
+          wget https://json.schemastore.org/github-workflow.json -O ${{ github.workspace }}/cache/github-workflow.json-schema.json
+          wget http://json-schema.org/draft-07/schema -O ${{ github.workspace }}/cache/draft-07.json-schema.json
 
       - name: Configure Node
         uses: actions/setup-node@v3
