@@ -33,6 +33,9 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.metadata.outputs.packages).* }}
     steps:
+      - name: Check out code # Required to be able to use "generate-package-split-branch" action
+        uses: actions/checkout@v3
+
       - name: Generate base branch
         id: base-generator
         uses: ./.github/actions/generate-package-split-branch
