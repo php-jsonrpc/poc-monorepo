@@ -12,7 +12,7 @@ on:
       - synchronize
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.head_ref || github.ref_name }}"
+  group: "${{ github.workflow }}-${{ github.head_ref }}"
   cancel-in-progress: true
 
 defaults:
@@ -20,6 +20,19 @@ defaults:
     shell: bash
 
 permissions: {}
+
+env:
+  CACHE_KEY: validate-github-action-config-schema-cache-${{ github.head_ref }}
+  CACHE_DIR: ${{ env.CACHE_DIR }}
+  NPM_LOCK_FILE_PATH: ${{ env.CACHE_DIR }}/package-lock.json
+  ACTION_SCHEMA_FILE_PATH: ${{ env.CACHE_DIR }}/github-action.json-schema.json
+  WORKFLOW_SCHEMA_FILE_PATH: ${{ env.CACHE_DIR }}/github-workflow.json-schema.json
+  DRAFT_7_SCHEMA_FILE_PATH: ${{ env.CACHE_DIR }}/draft-07.json-schema.json
+  CACHED_DIR_LIST: |
+    ${{ env.NPM_LOCK_FILE_PATH }}
+    ${{ env.ACTION_SCHEMA_FILE_PATH }}
+    ${{ env.WORKFLOW_SCHEMA_FILE_PATH }}
+    ${{ env.DRAFT_7_SCHEMA_FILE_PATH }}
 
 jobs:
   metadata:
@@ -31,10 +44,21 @@ jobs:
       - name: Checkout ${{ matrix.pkg_name }}
         uses: actions/checkout@v3
 
+      - name: Setup cache
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.CACHED_DIR_LIST }}
+          key: ${{ env.CACHE_KEY }}
+
       - name: Initialize cache directory
+        if: ${{ steps.cache.outputs.cache-hit != 'true'}}
         run: |
-          mkdir -p ${{ github.workspace }}/cache
-          echo "{}" > ${{ github.workspace }}/cache/package-lock.json
+          mkdir -p ${{ env.CACHE_DIR }}
+          echo "{}" > ${{ env.NPM_LOCK_FILE_PATH }}
+          wget https://json.schemastore.org/github-action.json -O ${{ env.ACTION_SCHEMA_FILE_PATH }}
+          wget https://json.schemastore.org/github-workflow.json -O ${{ env.WORKFLOW_SCHEMA_FILE_PATH }}
+          wget http://json-schema.org/draft-07/schema -O ${{ env.DRAFT_7_SCHEMA_FILE_PATH }}
 
       - name: Configure Node
         id: node
@@ -43,7 +67,11 @@ jobs:
           node-version: 18
           check-latest: true
           cache: npm
-          cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
+          cache-dependency-path: ${{ env.NPM_LOCK_FILE_PATH }}
+
+      - name: Pre-install validator
+        if: ${{ steps.node.outputs.cache-hit != 'true' }}
+        run: npm install -g pajv # Used on next job to perform the validation (will be cached by setup-node action)
 
       - uses: dorny/paths-filter@v2
         id: changes
@@ -57,12 +85,8 @@ jobs:
               - added|modified: '**/.github/workflows/**/*.yaml'
               - added|modified: '**/.github/workflows/**/*.yml'
 
-      - name: Install validator
-        if: ${{ steps.node.outputs.cache-hit != 'true' }}
-        run: npm install -g pajv # Used on next job to perform the validation
-
       - name: Install required NodeJs libs
-        run:  npm install yaml # Used below to generate the matrix
+        run:  npm install yaml # Used below to generate the matrix (won't be cached by setup-node action !)
 
       - name: Prepare matrix
         id: matrix
@@ -80,15 +104,17 @@ jobs:
             const list = [];
             for (const item of JSON.parse('${{ steps.changes.outputs.workflows_files }}')) {
               list.push({
-                file: item, 
-                type: 'workflow', 
+                file_path: item,
+                type: 'workflow',
+                schema_file_path: '${{ env.WORKFLOW_SCHEMA_FILE_PATH }}',
                 name: await getName(item),
               });
             }
             for (const item of JSON.parse('${{ steps.changes.outputs.actions_files }}')) {
               list.push({
-                file: item, 
-                type: 'action', 
+                file_path: item,
+                type: 'action',
+                schema_file_path: '${{ env.ACTION_SCHEMA_FILE_PATH }}',
                 name: await getName(item),
               });
             }
@@ -97,7 +123,7 @@ jobs:
   
 
   validate:
-    name: "\"${{ matrix.name || matrix.file }}\" ${{ matrix.type }}"
+    name: ${{ matrix.name && format('"{0}" {1}', matrix.name, matrix.type) || matrix.file_path }}
     runs-on: ubuntu-latest
     needs: [ metadata ]
     strategy:
@@ -109,27 +135,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Initialize cache directory
-        run: |
-          mkdir -p ${{ github.workspace }}/cache
-          echo "{}" > ${{ github.workspace }}/cache/package-lock.json
-
       - name: Setup cache
         id: cache
         uses: actions/cache@v3
         with:
-          path: |
-            ${{ github.workspace }}/cache/github-action.json-schema.json
-            ${{ github.workspace }}/cache/github-workflow.json-schema.json
-            ${{ github.workspace }}/cache/draft-07.json-schema.json
-          key: validate-github-action-config-schema-cache
-
-      - name: Download JSON schemas
-        if: ${{ steps.cache.outputs.cache-hit != 'true'}}
-        run: |
-          wget https://json.schemastore.org/github-action.json -O ${{ github.workspace }}/cache/github-action.json-schema.json
-          wget https://json.schemastore.org/github-workflow.json -O ${{ github.workspace }}/cache/github-workflow.json-schema.json
-          wget http://json-schema.org/draft-07/schema -O ${{ github.workspace }}/cache/draft-07.json-schema.json
+          path: ${{ env.CACHED_DIR_LIST }}
+          key: ${{ env.CACHE_KEY }}
 
       - name: Configure Node
         uses: actions/setup-node@v3
@@ -137,21 +148,21 @@ jobs:
           node-version: 18
           check-latest: true
           cache: npm
-          cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
+          cache-dependency-path: ${{ env.NPM_LOCK_FILE_PATH }}
 
       - name: Validate
         env:
-          OUTPUT_FILE_PATH: ${{ github.workspace }}/cache/pajv.output
-          ERRORS_FILE_PATH: ${{ github.workspace }}/cache/pajv.errors
+          OUTPUT_FILE_PATH: /tmp/pajv.output
+          ERRORS_FILE_PATH: /tmp/pajv.errors
         run: |
           ($(npm -g config get prefix)/bin/pajv test \
             --valid \
             --errors=line \
             --json-pointers \
             --extend-refs=true \
-            -s ${{ github.workspace }}/cache/github-${{ matrix.type }}.json-schema.json \
-            -r ${{ github.workspace }}/cache/draft-07.json-schema.json \
-            -d ${{ matrix.file }} 2>&1 \
+            -s ${{ matrix.schema_file_path }} \
+            -r ${{ env.DRAFT_7_SCHEMA_FILE_PATH }} \
+            -d ${{ matrix.file_path }} 2>&1 \
           || true) >$OUTPUT_FILE_PATH
           echo "::debug ::$(cat $OUTPUT_FILE_PATH)"
           if [[ "$(cat $OUTPUT_FILE_PATH | tail -n +2 | wc -l)" -gt 0 ]]; then
