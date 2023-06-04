@@ -58,7 +58,7 @@ jobs:
               - added|modified: '**/.github/workflows/**/*.yml'
 
       - name: Install required NodeJs libs
-        if: ${{ !steps.node.output.cache-hit }}
+        if: ${{ !steps.node.outputs.cache-hit }}
         run: |
           npm install yaml
           npm install -g pajv
@@ -124,7 +124,7 @@ jobs:
           key: validate-github-action-config-schema-cache
 
       - name: Download JSON schemas
-        if: ${{ !steps.cache.output.hit }}
+        if: ${{ !steps.cache.outputs.hit }}
         run: |
           wget https://json.schemastore.org/github-action.json -O ${{ github.workspace }}/cache/github-action.json-schema.json
           wget https://json.schemastore.org/github-workflow.json -O ${{ github.workspace }}/cache/github-workflow.json-schema.json
