@@ -124,7 +124,7 @@ jobs:
           key: validate-github-action-config-schema-cache
 
       - name: Download JSON schemas
-        if: ${{ steps.cache.outputs.hit != 'true'}}
+        if: ${{ steps.cache.outputs.cache-hit != 'true'}}
         run: |
           wget https://json.schemastore.org/github-action.json -O ${{ github.workspace }}/cache/github-action.json-schema.json
           wget https://json.schemastore.org/github-workflow.json -O ${{ github.workspace }}/cache/github-workflow.json-schema.json
