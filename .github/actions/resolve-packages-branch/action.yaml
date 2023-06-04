@@ -26,19 +26,19 @@ runs:
       run: |
         # Enhance list
         echo '${{ inputs.list }}' | \
-          jq -r -M '\
-            map( \
-              "split/\(.name)/" as $prefix | \
-              .current_branch="${{ github.ref_name }}" | \
-              .target_branch=( \
-                if .current_branch == 'develop' then "\($prefix)/develop" \
-                  elif .revision then .target_branch="\($prefix)/(.revision)" \
-                  else .target_branch=(.current_branch | ltrimstr($prefix)) \
-                end \
-              ) | \
-              .is_external_target_branch=(.target == (.branches.source | ltrimstr($prefix)) \
-            ) | \
-            tostring \
+          jq -r -M ' 
+            map( 
+              "split/\(.name)/" as $prefix | 
+              .current_branch="develop"  | 
+              .target_branch=(
+                if .current_branch == "develop" then "\($prefix)develop" 
+                  elif .revision then "\($prefix)(.revision)" 
+                  else .current_branch | ltrimstr($prefix) 
+                end
+              ) | 
+              .is_external_target_branch=(.target_branch == (.current_branch | ltrimstr($prefix))) 
+            ) 
+            | tostring 
           ' > list.json
         cat list.json | jq
         echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
