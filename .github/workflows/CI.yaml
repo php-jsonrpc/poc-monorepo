@@ -25,6 +25,8 @@ jobs:
   metadata:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
+    with:
+      resolve-state: true
 
   package-CI:
     name: ${{ matrix.pkg_name }}

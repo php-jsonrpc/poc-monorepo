@@ -12,7 +12,7 @@ on:
       - synchronize
 
 concurrency:
-  group: "${{ github.workflow }}-${{ github.head_ref || github.ref_name }}"
+  group: "${{ github.workflow }}-${{ github.head_ref }}"
   cancel-in-progress: true
 
 defaults:
@@ -20,6 +20,14 @@ defaults:
     shell: bash
 
 permissions: {}
+
+env:
+  CACHE_KEY: validate-github-action-config-schema-cache-${{ github.head_ref }}
+  CACHE_DIR: ${{ github.workspace }}/cache
+  NPM_LOCK_FILE_PATH: ${{ github.workspace }}/cache/package-lock.json
+  ACTION_SCHEMA_FILE_PATH: ${{ github.workspace }}/cache/github-action.json-schema.json
+  WORKFLOW_SCHEMA_FILE_PATH: ${{ github.workspace }}/cache/github-workflow.json-schema.json
+  DRAFT_7_SCHEMA_FILE_PATH: ${{ github.workspace }}/cache/draft-07.json-schema.json
 
 jobs:
   metadata:
@@ -36,16 +44,33 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            ${{ github.workspace }}/cache/package-lock.json
-            ${{ github.workspace }}/cache/node_modules
-          key: validate-github-action-config-node-cache
+            ${{ env.NPM_LOCK_FILE_PATH }}
+            ${{ env.ACTION_SCHEMA_FILE_PATH }}
+            ${{ env.WORKFLOW_SCHEMA_FILE_PATH }}
+            ${{ env.DRAFT_7_SCHEMA_FILE_PATH }}
+          key: ${{ env.CACHE_KEY }}
 
-      - name: Create cache directory
-        if: ${{ !steps.cache.output.hit }}
-        shell: bash
+      - name: Initialize cache directory
+        if: ${{ steps.cache.outputs.cache-hit != 'true'}}
         run: |
-          mkdir -p ${{ github.workspace }}/cache
-          echo "{}" > ${{ github.workspace }}/cache/package-lock.json
+          mkdir -p ${{ env.CACHE_DIR }}
+          echo "{}" > ${{ env.NPM_LOCK_FILE_PATH }}
+          wget https://json.schemastore.org/github-action.json -O ${{ env.ACTION_SCHEMA_FILE_PATH }}
+          wget https://json.schemastore.org/github-workflow.json -O ${{ env.WORKFLOW_SCHEMA_FILE_PATH }}
+          wget http://json-schema.org/draft-07/schema -O ${{ env.DRAFT_7_SCHEMA_FILE_PATH }}
+
+      - name: Configure Node
+        id: node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          check-latest: true
+          cache: npm
+          cache-dependency-path: ${{ env.NPM_LOCK_FILE_PATH }}
+
+      - name: Pre-install validator
+        if: ${{ steps.node.outputs.cache-hit != 'true' }}
+        run: npm install -g pajv # Used on next job to perform the validation (will be cached by setup-node action)
 
       - uses: dorny/paths-filter@v2
         id: changes
@@ -59,19 +84,8 @@ jobs:
               - added|modified: '**/.github/workflows/**/*.yaml'
               - added|modified: '**/.github/workflows/**/*.yml'
 
-      - name: Configure Node
-        id: node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          check-latest: true
-          cache: npm
-          cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
-
       - name: Install required NodeJs libs
-        if: ${{ !steps.node.output.cache-hit }}
-        shell: bash
-        run: npm install yaml
+        run:  npm install yaml # Used below to generate the matrix (won't be cached by setup-node action !)
 
       - name: Prepare matrix
         id: matrix
@@ -89,15 +103,17 @@ jobs:
             const list = [];
             for (const item of JSON.parse('${{ steps.changes.outputs.workflows_files }}')) {
               list.push({
-                file: item, 
-                type: 'workflow', 
+                file_path: item,
+                type: 'workflow',
+                schema_file_path: '${{ env.WORKFLOW_SCHEMA_FILE_PATH }}',
                 name: await getName(item),
               });
             }
             for (const item of JSON.parse('${{ steps.changes.outputs.actions_files }}')) {
               list.push({
-                file: item, 
-                type: 'action', 
+                file_path: item,
+                type: 'action',
+                schema_file_path: '${{ env.ACTION_SCHEMA_FILE_PATH }}',
                 name: await getName(item),
               });
             }
@@ -106,7 +122,7 @@ jobs:
   
 
   validate:
-    name: "\"${{ matrix.name || matrix.file }}\" ${{ matrix.type }}"
+    name: ${{ matrix.name && format('"{0}" {1}', matrix.name, matrix.type) || matrix.file_path }}
     runs-on: ubuntu-latest
     needs: [ metadata ]
     strategy:
@@ -118,8 +134,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Validate
-        uses: ./.github/actions/validate-github-action-config
+      - name: Setup cache
+        id: cache
+        uses: actions/cache/restore@v3
         with:
-          file: ${{ matrix.file }}
-          type: ${{ matrix.type }}
+          fail-on-cache-miss: true
+          path: |
+            ${{ env.NPM_LOCK_FILE_PATH }}
+            ${{ env.ACTION_SCHEMA_FILE_PATH }}
+            ${{ env.WORKFLOW_SCHEMA_FILE_PATH }}
+            ${{ env.DRAFT_7_SCHEMA_FILE_PATH }}
+          key: ${{ env.CACHE_KEY }}
+
+      - name: Configure Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          check-latest: true
+          cache: npm
+          cache-dependency-path: ${{ env.NPM_LOCK_FILE_PATH }}
+
+      - name: Validate
+        env:
+          OUTPUT_FILE_PATH: /tmp/pajv.output
+          ERRORS_FILE_PATH: /tmp/pajv.errors
+        run: |
+          ($(npm -g config get prefix)/bin/pajv test \
+            --valid \
+            --errors=line \
+            --json-pointers \
+            --extend-refs=true \
+            -s ${{ matrix.schema_file_path }} \
+            -r ${{ env.DRAFT_7_SCHEMA_FILE_PATH }} \
+            -d ${{ matrix.file_path }} 2>&1 \
+          || true) >$OUTPUT_FILE_PATH
+          echo "::debug ::$(cat $OUTPUT_FILE_PATH)"
+          if [[ "$(cat $OUTPUT_FILE_PATH | tail -n +2 | wc -l)" -gt 0 ]]; then
+            cat $OUTPUT_FILE_PATH | tail -n +2 | jq -r --color-output ' map("\(.dataPath): \(.message) (\(.params.additionalProperty))") | unique | join("\n") ' >$ERRORS_FILE_PATH  2>&1
+            while IFS= read -r line; do
+              echo "::error file=${{ matrix.file }}::$line"
+            done <<< "$(cat $ERRORS_FILE_PATH)"
+            exit 2
+          fi

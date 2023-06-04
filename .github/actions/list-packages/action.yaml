@@ -1,17 +1,11 @@
 name: List packages
 description: Output list of known packages
+
 outputs:
   list:
     description: List of updated packages
     value: ${{ steps.list-generator.outputs.list }}
-inputs:
-  state_from:
-    description: 'Git base reference used to compute package state'
-    required: false
-  updated_only:
-    description: 'Weither to filter out non updated packages or not (requires `state_from` option !)'
-    required: false
-    default: 'false'
+
 runs:
   using: composite
   steps:
