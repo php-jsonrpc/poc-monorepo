@@ -25,21 +25,51 @@ jobs:
   metadata:
     name: Metadata
     uses: ./.github/workflows/list-packages.yaml
-    with:
-      resolve-state: true
+
+  enhanced-metadata:
+    name: Metadata / Branches
+    needs: [ metadata ]
+    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.generator.outputs.list }}
+      updated_packages: ${{ steps.updated-packages-generator.outputs.list }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Resolve packages state
+        if: ${{ inputs.resolve-state }}
+        id: generator
+        uses: ./.github/actions/resolve-packages-state
+        with:
+          list: ${{ needs.metadata.outputs.packages }}
+
+      - name: Generate updated packages list
+        if: ${{ inputs.resolve-state }}
+        id: updated-packages-generator
+        shell: bash
+        # Do not run command inside a $(...) clause, else errors won't be caught !
+        run: |
+          # Generate updated packages list
+          echo '${{ steps.list-with-state-generator.outputs.list }}' | \
+            jq -c -M 'map(select(.updated == true)) | map(.name)' \
+            > list.json
+          cat list.json | jq
+          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
 
   package-CI:
     name: ${{ matrix.pkg_name }}
-    if: ${{ needs.metadata.outputs.updated_packages != '[]' && needs.metadata.outputs.updated_packages != '' }}
-    needs: [ metadata ]
+    if: ${{ needs.enhanced-metadata.outputs.updated_packages != '[]' && needs.enhanced-metadata.outputs.updated_packages != '' }}
+    needs: [ enhanced-metadata ]
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        pkg_name: ${{ fromJson(needs.metadata.outputs.updated_packages) }}
+        pkg_name: ${{ fromJson(needs.enhanced-metadata.outputs.updated_packages) }}
     uses: ./.github/workflows/php-package-CI.yaml
     with:
-      path: ${{ fromJson(needs.metadata.outputs.packages)[matrix.pkg_name].path }}
+      path: ${{ fromJson(needs.enhanced-metadata.outputs.packages)[matrix.pkg_name].path }}
 
   static_checks:
     name: Static checks
@@ -52,12 +82,12 @@ jobs:
   deps_vulnerability_scan:
     name: Dependencies vulnerabilities
     needs: [metadata, static_checks]
+    if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write # required for "comment-summary-in-pr" option from actions/dependency-review-action
     steps:
       - name: Scan
-        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/dependency-review-action@v3
         with:
           comment-summary-in-pr: true

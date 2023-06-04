@@ -34,7 +34,7 @@ jobs:
 
       - name: Resolve branches
         id: generator
-        uses: ./.github/actions/resolve-packages-branch
+        uses: ./.github/actions/resolve-packages-branches
         with:
           list: ${{ needs.metadata.outputs.packages }}
 
