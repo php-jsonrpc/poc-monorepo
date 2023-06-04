@@ -2,7 +2,9 @@ name: Update package develop branches
 
 on:
   push:
-    branches: [ develop ]
+    branches:
+      - develop
+      - split/**/*
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref_name }}"
@@ -20,41 +22,31 @@ jobs:
     uses: ./.github/workflows/list-packages.yaml
 
   branches-metadata:
-    name: Package split branches
+    name: Package branches
     needs: [ metadata ]
     if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     runs-on: ubuntu-latest
     outputs:
-      head_branch: develop
-      base_branch: ${{ steps.base-generator.outputs.branch }}
-    strategy:
-      fail-fast: false
-      max-parallel: 4
-      matrix:
-        include: ${{ fromJson(needs.metadata.outputs.packages).* }}${{ fromJson(needs.metadata.outputs.packages).* }}
+      packages: ${{ steps.generator.outputs.packages }}
     steps:
-      - name: Check out code # Required to be able to use "generate-package-split-branch" action
-        uses: actions/checkout@v3
-
-      - name: Generate base branch
-        id: base-generator
-        uses: ./.github/actions/generate-package-split-branch
+      - name: Resolve
+        id: generator
+        uses: ./.github/actions/resolve-packages-branch
         with:
-          pkg_name: ${{ matrix.name }}
-          pkg_branch: develop
+          list: ${{ steps.metadata.outputs.packages }}
 
   main:
     name: ${{ matrix.name }}
-    needs: [ metadata, branches-metadata ]
-    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
+    needs: [ branches-metadata ]
+    if: ${{ needs.branches-metadata.outputs.packages != '[]' && needs.branches-metadata.outputs.packages != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        include: ${{ fromJson(needs.metadata.outputs.packages).* }}
+        include: ${{ fromJson(needs.branches-metadata.outputs.packages).* }}
     permissions:
       contents: write
     uses: ./.github/workflows/update-branch.yaml
     with:
-      head: ${{ needs.branches-metadata.outputs[format('{0}_head', matrix.name)] }}
-      base: ${{ needs.branches-metadata.outputs[format('{0}_base', matrix.name)] }}
+      head: ${{ matrix.current_branch }}
+      base: ${{ matrix.target_branch }}

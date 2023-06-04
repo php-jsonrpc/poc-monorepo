@@ -1,5 +1,5 @@
 name: Resolve packages state
-description: Output list of known packages
+description: Append `updated` property to provided list
 outputs:
   list:
     description: Provided list augmented with `updated` property
