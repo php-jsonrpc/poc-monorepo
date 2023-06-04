@@ -25,10 +25,13 @@ jobs:
     if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     runs-on: ubuntu-latest
     outputs:
-      head_base: develop
-      base_base: ${{ steps.base-generator.outputs.branch }}
-    matrix:
-      include: ${{ fromJson(needs.metadata.outputs.packages).* }}
+      ${{ matrix.name }}_head: develop
+      ${{ matrix.name }}_base: ${{ steps.base-generator.outputs.branch }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include: ${{ fromJson(needs.metadata.outputs.packages).* }}
     steps:
       - name: Generate base branch
         id: base-generator
