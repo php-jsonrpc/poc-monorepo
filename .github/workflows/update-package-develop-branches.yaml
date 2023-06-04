@@ -24,6 +24,7 @@ jobs:
   enhanced-metadata:
     name: Metadata / Branches
     needs: [ metadata ]
+    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.generator.outputs.list }}
@@ -35,7 +36,7 @@ jobs:
         id: generator
         uses: ./.github/actions/resolve-packages-branch
         with:
-          list: ${{ steps.list-with-state-generator.outputs.list || steps.list-generator.outputs.list }}
+          list: ${{ needs.metadata.outputs.packages }}
 
   main:
     name: ${{ matrix.name }}
