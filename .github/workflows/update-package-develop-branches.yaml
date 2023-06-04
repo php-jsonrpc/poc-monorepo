@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        include: ${{ fromJson(needs.metadata.outputs.packages).* }}
+        include: ${{ fromJson(needs.metadata.outputs.packages).* }}${{ fromJson(needs.metadata.outputs.packages).* }}
     steps:
       - name: Check out code # Required to be able to use "generate-package-split-branch" action
         uses: actions/checkout@v3
@@ -43,19 +43,10 @@ jobs:
           pkg_name: ${{ matrix.name }}
           pkg_branch: develop
 
-  DEBUG:
-    name: DEBUG
-    needs: [ metadata, branches-metadata ]
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "${{ needs.metadata.outputs.packages }}"
-          echo "${{ toJson(needs.branches-metadata.outputs) }}"
-
   main:
     name: ${{ matrix.name }}
     needs: [ metadata, branches-metadata ]
-    if: ${{ false && needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
+    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
