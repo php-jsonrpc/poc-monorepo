@@ -24,15 +24,10 @@ permissions: {}
 env:
   CACHE_KEY: validate-github-action-config-schema-cache-${{ github.head_ref }}
   CACHE_DIR: ${{ github.workspace }}/cache
-  NPM_LOCK_FILE_PATH: ${{ '$CACHE_DIR' }}/package-lock.json
-  ACTION_SCHEMA_FILE_PATH: ${{ '$CACHE_DIR' }}/github-action.json-schema.json
-  WORKFLOW_SCHEMA_FILE_PATH: ${{ '$CACHE_DIR' }}/github-workflow.json-schema.json
-  DRAFT_7_SCHEMA_FILE_PATH: ${{ '$CACHE_DIR' }}/draft-07.json-schema.json
-  CACHED_DIR_LIST: |
-    ${{ '$NPM_LOCK_FILE_PATH' }}
-    ${{ '$ACTION_SCHEMA_FILE_PATH' }}
-    ${{ '$WORKFLOW_SCHEMA_FILE_PATH' }}
-    ${{ '$DRAFT_7_SCHEMA_FILE_PATH' }}
+  NPM_LOCK_FILE_PATH: ${{ github.workspace }}/cache/package-lock.json
+  ACTION_SCHEMA_FILE_PATH: ${{ github.workspace }}/cache/github-action.json-schema.json
+  WORKFLOW_SCHEMA_FILE_PATH: ${{ github.workspace }}/cache/github-workflow.json-schema.json
+  DRAFT_7_SCHEMA_FILE_PATH: ${{ github.workspace }}/cache/draft-07.json-schema.json
 
 jobs:
   metadata:
@@ -48,7 +43,11 @@ jobs:
         id: cache
         uses: actions/cache@v3
         with:
-          path: ${{ env.CACHED_DIR_LIST }}
+          path: |
+            ${{ env.NPM_LOCK_FILE_PATH }}
+            ${{ env.ACTION_SCHEMA_FILE_PATH }}
+            ${{ env.WORKFLOW_SCHEMA_FILE_PATH }}
+            ${{ env.DRAFT_7_SCHEMA_FILE_PATH }}
           key: ${{ env.CACHE_KEY }}
 
       - name: Initialize cache directory
@@ -139,7 +138,11 @@ jobs:
         id: cache
         uses: actions/cache@v3
         with:
-          path: ${{ env.CACHED_DIR_LIST }}
+          path: |
+            ${{ env.NPM_LOCK_FILE_PATH }}
+            ${{ env.ACTION_SCHEMA_FILE_PATH }}
+            ${{ env.WORKFLOW_SCHEMA_FILE_PATH }}
+            ${{ env.DRAFT_7_SCHEMA_FILE_PATH }}
           key: ${{ env.CACHE_KEY }}
 
       - name: Configure Node
