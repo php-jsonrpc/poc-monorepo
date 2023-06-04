@@ -57,11 +57,12 @@ jobs:
               - added|modified: '**/.github/workflows/**/*.yaml'
               - added|modified: '**/.github/workflows/**/*.yml'
 
-      - name: Install required NodeJs libs
+      - name: Install validator
         if: ${{ steps.node.outputs.cache-hit != 'true' }}
-        run: |
-          npm install yaml # Used below to generate the matrix
-          npm install -g pajv # Used on next job to perform the validation
+        run: npm install -g pajv # Used on next job to perform the validation
+
+      - name: Install required NodeJs libs
+        run:  npm install yaml # Used below to generate the matrix
 
       - name: Prepare matrix
         id: matrix
