@@ -136,8 +136,9 @@ jobs:
 
       - name: Setup cache
         id: cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
+          fail-on-cache-miss: true
           path: |
             ${{ env.NPM_LOCK_FILE_PATH }}
             ${{ env.ACTION_SCHEMA_FILE_PATH }}
