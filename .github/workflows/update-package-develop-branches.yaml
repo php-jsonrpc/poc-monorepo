@@ -25,13 +25,13 @@ jobs:
 
   main:
     name: ${{ matrix.name }}
-    needs: [ branches-metadata ]
-    if: ${{ needs.branches-metadata.outputs.packages != '[]' && needs.branches-metadata.outputs.packages != '' }}
+    needs: [ metadata ]
+    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        include: ${{ fromJson(needs.branches-metadata.outputs.packages).* }}
+        include: ${{ fromJson(needs.metadata.outputs.packages).* }}
     permissions:
       contents: write
     uses: ./.github/workflows/update-branch.yaml
