@@ -31,8 +31,8 @@ jobs:
       - name: Base branch exists ?
         id: base-branch-check
         run: |
-          git fetch origin ${{ inputs.base }} -v && EXITS=1 || EXITS=0
-          echo "::debug ::Base branch exits: $(test $EXISTS -eq 1 && 'Yes' || 'No')"
+          git fetch origin ${{ inputs.base }} -v && EXISTS=1 || EXISTS=0
+          echo "::debug ::Base branch exits: $(test $EXISTS -eq 1 && echo 'Yes' || echo 'No')"
           echo "exists=$EXISTS" >> $GITHUB_OUTPUT
 
       - name: Initialize target branch
