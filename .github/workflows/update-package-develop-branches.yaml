@@ -25,8 +25,8 @@ jobs:
     if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     runs-on: ubuntu-latest
     outputs:
-      ${{ matrix.name }}_head: develop
-      ${{ matrix.name }}_base: ${{ steps.base-generator.outputs.branch }}
+      head_branch: develop
+      base_branch: ${{ steps.base-generator.outputs.branch }}
     strategy:
       fail-fast: false
       max-parallel: 4
