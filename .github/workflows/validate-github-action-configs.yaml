@@ -60,7 +60,7 @@ jobs:
       - name: Install required NodeJs libs
         if: ${{ steps.node.outputs.cache-hit != 'true' }}
         run: |
-          npm install -g yaml # Used below to generate the matrix
+          npm install yaml # Used below to generate the matrix
           npm install -g pajv # Used on next job to perform the validation
 
       - name: Prepare matrix
