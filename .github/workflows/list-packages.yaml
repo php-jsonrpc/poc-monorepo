@@ -2,16 +2,17 @@ name: List packages
 on:
   workflow_call:
     inputs:
-      split-branch-pattern:
-        description: 'Split branch pattern to append for each package'
-        type: string
+      resolve-state:
+        description: 'Weither to resolve each package state based on github event (Push, PR, etc) or not'
+        type: boolean
         required: false
+        default: false
     outputs:
       packages:
         description: List of packages
         value: ${{ jobs.packages.outputs.packages }}
       updated_packages:
-        description: List of updated package names
+        description: List of updated package names (Requires `resolve-state` to be enabled !)
         value: ${{ jobs.packages.outputs.updated_package_names }}
 
 permissions: {}
@@ -21,24 +22,27 @@ jobs:
     name: Packages
     runs-on: ubuntu-latest
     outputs:
-      packages: ${{ inputs.split-branch-pattern != '' && steps.list-with-split-branch-generator.outputs.list || steps.enhanced-list-generator.outputs.list }}
-      updated_package_names: ${{ steps.updated-packages-list-generator.outputs.list }}
+      packages: ${{ inputs.resolve-state && steps.enhanced-list-generator.outputs.list || steps.list-generator.outputs.list }}
+      updated_package_names: ${{ inputs.resolve-state && steps.updated-packages-list-generator.outputs.list || '[]' }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
       - name: Setup PHP
+        id: setup-php
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
 
-      - name: Setup cache
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            composer.lock
-            vendor
-          key: ${{ github.head_ref || github.ref_name }}-${{ hashFiles('**/composer.json') }}-list-packages-composer
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-php${{ steps.composer-cache.outputs.php-version }}-${{ hashFiles('**/composer.lock') }}-list-packages
 
       - name: Install macrorepo
         run: make install
@@ -48,32 +52,21 @@ jobs:
         uses: ./.github/actions/list-packages
 
       - name: Resolve packages state
+        if: ${{ inputs.resolve-state }}
         id: enhanced-list-generator
         uses: ./.github/actions/resolve-packages-state
         with:
           list: ${{ steps.list-generator.outputs.list }}
 
-      - name: Append packages split branch
-        id: list-with-split-branch-generator
-        if: ${{ inputs.split-branch-pattern != '' }}
-        shell: bash
-        # Do not run command inside a $(...) clause, else errors won't be caught !
-        run: |
-          # Append packages split branch
-          echo '${{ steps.enhanced-list-generator.outputs.list }}' | \
-            jq -r -M 'map(. + { "split_branch": "${{ inputs.split-branch-pattern }}" } ) | tostring' \
-            > list.json
-          cat list.json | jq
-          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
-
       - name: Generate updated packages list
+        if: ${{ inputs.resolve-state }}
         id: updated-packages-list-generator
         shell: bash
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
           # Generate updated packages list
           echo '${{ steps.enhanced-list-generator.outputs.list }}' | \
-            jq -c -M 'map(select(.state == "updated")) | map(.name)' \
+            jq -c -M 'map(select(.updated == true)) | map(.name)' \
             > list.json
           cat list.json | jq
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT

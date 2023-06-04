@@ -31,21 +31,33 @@ jobs:
       - name: Checkout ${{ matrix.pkg_name }}
         uses: actions/checkout@v3
 
+      - name: Configure Node
+        id: node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          check-latest: true
+          cache: npm
+          cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
+
       - name: Setup cache
         id: cache
         uses: actions/cache@v3
         with:
           path: |
-            ${{ github.workspace }}/cache/package-lock.json
-            ${{ github.workspace }}/cache/node_modules
-          key: validate-github-action-config-node-cache
+            ${{ github.workspace }}/cache/github-action.json-schema.json
+            ${{ github.workspace }}/cache/github-workflow.json-schema.json
+            ${{ github.workspace }}/cache/draft-07.json-schema.json
+          key: validate-github-action-config-schema-cache
 
       - name: Create cache directory
         if: ${{ !steps.cache.output.hit }}
-        shell: bash
         run: |
           mkdir -p ${{ github.workspace }}/cache
           echo "{}" > ${{ github.workspace }}/cache/package-lock.json
+          wget https://json.schemastore.org/github-action.json -O ${{ github.workspace }}/cache/github-action.json-schema.json
+          wget https://json.schemastore.org/github-workflow.json -O ${{ github.workspace }}/cache/github-workflow.json-schema.json
+          wget http://json-schema.org/draft-07/schema -O ${{ github.workspace }}/cache/draft-07.json-schema.json
 
       - uses: dorny/paths-filter@v2
         id: changes
@@ -59,19 +71,11 @@ jobs:
               - added|modified: '**/.github/workflows/**/*.yaml'
               - added|modified: '**/.github/workflows/**/*.yml'
 
-      - name: Configure Node
-        id: node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          check-latest: true
-          cache: npm
-          cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
-
       - name: Install required NodeJs libs
         if: ${{ !steps.node.output.cache-hit }}
-        shell: bash
-        run: npm install yaml
+        run: |
+          npm install yaml
+          npm install -g pajv
 
       - name: Prepare matrix
         id: matrix
@@ -118,8 +122,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Validate
-        uses: ./.github/actions/validate-github-action-config
+      - name: Configure Node
+        uses: actions/setup-node@v3
         with:
-          file: ${{ matrix.file }}
-          type: ${{ matrix.type }}
+          node-version: 18
+          check-latest: true
+          cache: npm
+          cache-dependency-path: ${{ github.workspace }}/cache/package-lock.json
+
+      - name: Validate
+        env:
+          OUTPUT_FILE_PATH: ${{ github.workspace }}/cache/pajv.output
+          ERRORS_FILE_PATH: ${{ github.workspace }}/cache/pajv.errors
+        run: |
+          ($(npm -g config get prefix)/bin/pajv test \
+            --valid \
+            --errors=line \
+            --json-pointers \
+            --extend-refs=true \
+            -s ${{ github.workspace }}/cache/github-${{ matrix.type }}.json-schema.json \
+            -r ${{ github.workspace }}/cache/draft-07.json-schema.json \
+            -d ${{ matrix.file }} 2>&1 \
+          || true) >$OUTPUT_FILE_PATH
+          echo "::debug ::$(cat $OUTPUT_FILE_PATH)"
+          if [[ "$(cat $OUTPUT_FILE_PATH | tail -n +2 | wc -l)" -gt 0 ]]; then
+            cat $OUTPUT_FILE_PATH | tail -n +2 | jq -r --color-output ' map("\(.dataPath): \(.message) (\(.params.additionalProperty))") | unique | join("\n") ' >$ERRORS_FILE_PATH  2>&1
+            while IFS= read -r line; do
+              echo "::error file=${{ matrix.file }}::$line"
+            done <<< "$(cat $ERRORS_FILE_PATH)"
+            exit 2
+          fi

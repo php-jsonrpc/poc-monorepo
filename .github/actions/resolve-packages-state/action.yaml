@@ -2,7 +2,7 @@ name: Resolve packages state
 description: Output list of known packages
 outputs:
   list:
-    description: List of updated packages
+    description: Provided list augmented with `updated` property
     value: ${{ steps.list-generator.outputs.list }}
 inputs:
   list:
@@ -15,7 +15,6 @@ runs:
     - name: Generate path list
       id: path_list
       shell: bash
-      # Do not run command inside a $(...) clause, else errors won't be caught !
       run: |
         # Generate path list
         echo '${{ inputs.list }}' | \
@@ -36,11 +35,10 @@ runs:
     - name: Re-enerate packages list
       id: list-generator
       shell: bash
-      # Do not run command inside a $(...) clause, else errors won't be caught !
       run: |
         # Re-enerate packages list
         echo '[${{ inputs.list }},${{ steps.changes.outputs.changes }}]' | \
-          jq -r -M '.[1] as $list | .[0] | map({ "\(.name)": (. + { "state": (.name as $name | if $list | contains([$name]) then "updated" else "none" end ) } ) }) | add | tostring' \
+          jq -r -M '.[1] as $list | .[0] | map({ "\(.name)": (. + { "updated": (.name as $name | if $list | contains([$name]) then true else false end ) } ) }) | add | tostring' \
           > list.json
         cat list.json | jq
         echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
