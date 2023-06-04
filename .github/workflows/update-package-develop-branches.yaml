@@ -2,9 +2,7 @@ name: Update package develop branches
 
 on:
   push:
-    branches:
-      - develop
-      - split/**/*
+    branches: [develop]
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref_name }}"
