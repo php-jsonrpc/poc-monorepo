@@ -50,7 +50,7 @@ jobs:
         # Do not run command inside a $(...) clause, else errors won't be caught !
         run: |
           # Generate updated packages list
-          echo '${{ steps.list-with-state-generator.outputs.list }}' | \
+          echo '${{ steps.generator.outputs.list }}' | \
             jq -c -M 'map(select(.updated == true)) | map(.name)' \
             > list.json
           cat list.json | jq
