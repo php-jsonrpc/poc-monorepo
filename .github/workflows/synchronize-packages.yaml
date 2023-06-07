@@ -32,9 +32,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Check out code
-        uses: actions/checkout@v3
-
       - name: Setup PHP
         id: setup-php
         uses: shivammathur/setup-php@v2
@@ -116,13 +113,13 @@ jobs:
   # First synchronize packages repositories
   synchronize-packages:
     name: Synchronize ${{ matrix.package.name }} branches & tag
-    needs: [ enhanced-metadata ]
-    if: ${{ needs.enhanced-metadata.outputs.packages_to_synchronize != '[]' && needs.enhanced-metadata.outputs.packages_to_synchronize != '' }}
+    needs: [ metadata ]
+    if: ${{ needs.metadata.outputs.packages_to_synchronize != '[]' && needs.metadata.outputs.packages_to_synchronize != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        package: ${{ fromJson(needs.enhanced-metadata.outputs.packages_to_synchronize).* }}
+        package: ${{ fromJson(needs.metadata.outputs.packages_to_synchronize).* }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out monorepo code
@@ -145,13 +142,13 @@ jobs:
   # branches and tag will be done by this workflow (but from instances triggered for each maintenance branch updated)
   update-monorepo-maintenance-branches:
     name: Update ${{ matrix.package.name }} monorepo maintenance branch
-    needs: [ enhanced-metadata, synchronize-packages ]
-    if: ${{ needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update != '[]' && needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update != '' }}
+    needs: [ metadata, synchronize-packages ]
+    if: ${{ needs.metadata.outputs.packages_with_maintenance_branch_to_update != '[]' && needs.metadata.outputs.packages_with_maintenance_branch_to_update != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        package: ${{ fromJson(needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update).* }}
+        package: ${{ fromJson(needs.metadata.outputs.packages_with_maintenance_branch_to_update).* }}
     permissions:
       contents: write
     uses: ./.github/workflows/update-branch.yaml
