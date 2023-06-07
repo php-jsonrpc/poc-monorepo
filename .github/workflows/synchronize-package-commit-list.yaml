@@ -82,7 +82,7 @@ jobs:
             }
             
             // Output the list as reverse order (with first commit to synchronize as first element)
-            // list.reverse(); // Do not do that as it seems matrix start from the end of values ...
+            list.reverse();
             
             console.log(`after=${JSON.stringify(list)}`);
             
@@ -96,7 +96,7 @@ jobs:
       fail-fast: true # Stop as soon as there is an error, so it can be resumed
       max-parallel: 1 # Synchro must be done commit by commit !
       matrix:
-        commit: ${{ fromJson(needs.metadata.outputs.commits).* }}
+        commit: ${{ fromJson(needs.metadata.outputs.commits) }}
     uses: ./.github/workflows/synchronize-package-commit.yaml
     with:
       sha: ${{ matrix.commit.sha }}
