@@ -52,7 +52,7 @@ jobs:
           git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}...${{ inputs.sha_end }}' | tee list.txt
           # Take into account first commit
           git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}' | tee -a list.txt
-          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+          echo "list=$(cat list.txt)" >> $GITHUB_OUTPUT
 
       - name: Generate matrix
         id: matrix-generator
