@@ -101,6 +101,7 @@ jobs:
             console.log(`before=${JSON.stringify(packageList)}`);
             
             for (const key in packageList) {
+                const pkg = packageList[key];
                 if (typeof pkg != 'object'
                     || typeof pkg.split_repository !== 'object'
                     || !pkg.split_repository.organization
@@ -124,6 +125,7 @@ jobs:
             console.log(`before=${JSON.stringify(packageList)}`);
             
             for (const key in packageList) {
+                const pkg = packageList[key];
                 if (typeof pkg != 'object'
                     || typeof pkg.monorepo !== 'object'
                     || !pkg.monorepo.maintenance_branch
