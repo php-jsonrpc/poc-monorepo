@@ -38,11 +38,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Resolve packages state
+      - name: Resolve branches
         id: generator
-        uses: ./.github/actions/resolve-packages-state
+        uses: ./.github/actions/resolve-packages-branches
         with:
-          list: ${{ needs.metadata.outputs.packages }}
+          list: ${{ steps.generator.outputs.list }}
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
