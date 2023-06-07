@@ -42,7 +42,7 @@ jobs:
         id: generator
         uses: ./.github/actions/resolve-packages-branches
         with:
-          list: ${{ need.metadata.outputs.packages }}
+          list: ${{ needs.metadata.outputs.packages }}
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
