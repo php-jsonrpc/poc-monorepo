@@ -68,11 +68,11 @@ jobs:
             
             const rawTag = '${{ inputs.repository_tag }}'.trim();
             const tag = rawTag.length > 0 ? rawTag : undefined;
-            const result = [];
+            const list = [];
             for (const key in commitInfosList) {
                 const isFirstCommit = Number.parseInt(key) === 0;
                 const commitInfos = commitInfosList[key];
-                result.push({
+                list.push({
                     sha: commitInfos[0],
                     author_name: commitInfos[1],
                     author_email: commitInfos[2],
@@ -82,7 +82,11 @@ jobs:
             }
             
             // Output the list as reverse order (with first commit to synchronize as first element)
-            return result.reverse();
+            list.reverse();
+            
+            console.log(`after=${JSON.stringify(list)}`);
+            
+            return list;
 
   main:
     name: From ${{ matrix.commit.sha }}
