@@ -26,12 +26,12 @@ jobs:
     uses: ./.github/workflows/list-packages.yaml
 
   enhanced-metadata:
-    name: Metadata / Updated packages
+    name: Metadata / Create lists
     needs: [ metadata ]
     if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
     runs-on: ubuntu-latest
     outputs:
-      packages: ${{ steps.generator2.outputs.list }}
+      packages: ${{ steps.generator.outputs.list }}
       packages_with_maintenance_branch_to_update: ${{ steps.packages_with_maintenance_branch_to_update-generator.outputs.list }}
       packages_to_synchronize: ${{ steps.packages_to_synchronize-generator.outputs.list }}
     steps:
@@ -44,17 +44,11 @@ jobs:
         with:
           list: ${{ needs.metadata.outputs.packages }}
 
-      - name: Resolve branches
-        id: generator2
-        uses: ./.github/actions/resolve-packages-branches
-        with:
-          list: ${{ steps.generator.outputs.list }}
-
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
         shell: bash
         run: |
-          echo '${{ steps.generator2.outputs.list }}' | \
+          echo '${{ steps.generator.outputs.list }}' | \
             jq -c -M 'map(select(.package_maintenance_branch | length > 0))' \
             > list.json
           cat list.json | jq
@@ -64,7 +58,7 @@ jobs:
         id: packages_to_synchronize-generator
         shell: bash
         run: |
-          echo '${{ steps.generator2.outputs.list }}' | \
+          echo '${{ steps.generator.outputs.list }}' | \
             jq -c -M 'map(select((.package_maintenance_branch | length > 0) || (.package_tag | length > 0)))' \
             > list.json
           cat list.json | jq
