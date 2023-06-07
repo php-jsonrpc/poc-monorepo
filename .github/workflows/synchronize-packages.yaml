@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-php${{ steps.setup-php.outputs.php-version }}-${{ hashFiles('**/composer.lock') }}-metadata
+          key: ${{ runner.os }}-composer-php${{ steps.setup-php.outputs.php-version }}-${{ hashFiles('**/composer.json', '**/composer.lock') }}-metadata
 
       - name: Install macrorepo
         run: make install
