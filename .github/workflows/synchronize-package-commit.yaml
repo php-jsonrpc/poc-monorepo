@@ -1,0 +1,74 @@
+name: Synchronize package commit
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: Commit sha to synchronize
+        type: string
+        required: true
+      author_name:
+        description: Commit author name
+        type: string
+        required: true
+      author_email:
+        description: Commit author email
+        type: string
+        required: true
+      package_directory:
+        description: Path to the package inside the current repository
+        type: string
+        required: true
+      repository_organization:
+        description: Target repository organisation
+        type: string
+        required: true
+      repository_name:
+        description: Target repository name
+        type: string
+        required: true
+      repository_branch:
+        description: Target repository branch
+        type: string
+        required: true
+      repository_tag:
+        description: Target repository tag
+        type: string
+        required: false
+
+permissions: {}
+
+jobs:
+  main:
+    name: To branch ${{ inputs.repository_branch }}${{ inputs.repository_tag != '' && format('(tag {0})', inputs.repository_tag) || ''  }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.sha }}
+
+      - name: Synchronize branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
+        uses: symplify/monorepo-split-github-action@v2.3.0
+        with:
+          package_directory: ${{ inputs.package_directory }}
+          repository_organization: ${{ inputs.repository_organization }}
+          repository_name: ${{ inputs.repository_name }}
+          user_name: ${{ inputs.author_name }}
+          user_email: ${{ inputs.author_email }}
+          branch: ${{ inputs.repository_branch }}
+
+      - name: Synchronize tag
+        if: ${{ inputs.repository_tag != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
+        uses: symplify/monorepo-split-github-action@v2.3.0
+        with:
+          package_directory: ${{ inputs.package_directory }}
+          repository_organization: ${{ inputs.repository_organization }}
+          repository_name: ${{ inputs.repository_name }}
+          user_name: ${{ inputs.author_name }}
+          user_email: ${{ inputs.author_email }}
+          branch: ${{ inputs.repository_branch }}
+          tag: ${{ inputs.repository_tag }}

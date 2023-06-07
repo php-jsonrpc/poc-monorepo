@@ -1,4 +1,4 @@
-name: Synchronize packages
+name: Packages sync
 
 on:
   push:
@@ -97,46 +97,45 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const packageList = JSON.parse('${{ steps.generator2.outputs.list }}');
-            
-            return packageList.filter(item => item.split_repository.branch !== null);
+            return JSON.parse('${{ steps.generator2.outputs.list }}')
+                .filter(pkg => typeof pkg === 'object'
+                    && typeof pkg.split_repository === 'object'
+                    && pkg.split_repository.organization != null
+                    && pkg.split_repository.name != null
+                    && pkg.split_repository.branch != null
+                );
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
         uses: actions/github-script@v6
         with:
           script: |
-            const packageList = JSON.parse('${{ steps.generator2.outputs.list }}');
-            
-            return packageList.filter(item => item.monorepo.maintenance_branch !== null);
+            return JSON.parse('${{ steps.generator2.outputs.list }}')
+                .filter(pkg => typeof pkg === 'object'
+                    && typeof pkg.monorepo === 'object'
+                    && pkg.monorepo.maintenance_branch != null
+                );
 
   # First synchronize packages repositories
   synchronize-packages:
-    name: Synchronize ${{ matrix.package.name }} branches & tag
+    name: Synchronize ${{ matrix.package.name }}
     needs: [ metadata ]
     if: ${{ needs.metadata.outputs.packages_to_synchronize != '[]' && needs.metadata.outputs.packages_to_synchronize != '' }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
         package: ${{ fromJson(needs.metadata.outputs.packages_to_synchronize).* }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out monorepo code
-        uses: actions/checkout@v3
-
-      - name: Synchronize
-        env:
-          GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
-        uses: symplify/monorepo-split-github-action@v2.3.0
-        with:
-          package_directory: ${{ matrix.package.path }}
-          repository_organization: ${{ matrix.package.split_repository.organisation }}
-          repository_name: ${{ matrix.package.split_repository.name }}
-          user_name: ${{ env.COMMIT_AUTHOR_NAME }}
-          user_email: ${{ env.COMMIT_AUTHOR_EMAIL }}
-          branch: ${{ matrix.package.split_repository.branch }}
-          tag: ${{ matrix.package.split_repository.tag }}
+    uses: ./.github/workflows/synchronize-package-commit.yaml
+      with:
+        sha_begin: ${{ github.event.before }}
+        sha_end: ${{ github.sha }}
+        package_directory: ${{ matrix.package.path }}
+        repository_organization: ${{ matrix.package.split_repository.organization }}
+        repository_name: ${{ matrix.package.split_repository.name }}
+        repository_branch: ${{ matrix.package.split_repository.branch }}
+        repository_tag: ${{ matrix.package.split_repository.tag }}
 
   # Then update monorepo maintenance branches => maintenance branches synchronization to packages repositories
   # branches and tag will be done by this workflow (but from instances triggered for each maintenance branch updated)
