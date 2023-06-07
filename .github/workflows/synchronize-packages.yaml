@@ -97,24 +97,31 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            return JSON.parse('${{ steps.generator2.outputs.list }}')
-                .filter(pkg => typeof pkg === 'object'
+            (new Object()).entries
+            return Object.fromEntries(
+                JSON.parse('${{ steps.generator2.outputs.list }}')
+                .entries
+                .filter(([, pkg]) => typeof pkg === 'object'
                     && typeof pkg.split_repository === 'object'
                     && pkg.split_repository.organization != null
                     && pkg.split_repository.name != null
                     && pkg.split_repository.branch != null
-                );
+                )
+            );
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
         uses: actions/github-script@v6
         with:
           script: |
-            return JSON.parse('${{ steps.generator2.outputs.list }}')
-                .filter(pkg => typeof pkg === 'object'
+            return Object.fromEntries(
+                JSON.parse('${{ steps.generator2.outputs.list }}')
+                .entries
+                .filter(([, pkg]) => typeof pkg === 'object'
                     && typeof pkg.monorepo === 'object'
                     && pkg.monorepo.maintenance_branch != null
-                );
+                )
+            );
 
   # First synchronize packages repositories
   synchronize-packages:

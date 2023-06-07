@@ -50,7 +50,7 @@ runs:
                   // => Update split repository read-only develop branch with new updates
                   pkg.split_repository.branch = 'develop';
               } else {
-                  // => Nothing to update (current branch being most likely another package maintenance branch)
+                  // => Nothing to update (current branch being most likely a maintenance branch for another package)
                   pkg.split_repository.branch = null;
               }
               
