@@ -74,9 +74,9 @@ jobs:
       matrix:
         package: ${{ fromJson(needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update).* }}
     uses: ./.github/workflows/update-branch.yaml
-      with:
-        head: ${{ github.ref_name }}
-        base: ${{ matrix.package.monorepo_maintenance_branch }}
+    with:
+      head: ${{ github.ref_name }}
+      base: ${{ matrix.package.monorepo_maintenance_branch }}
 
   synchronize-packages:
     name: Synchronize ${{ matrix.package.name }} branches & tag
@@ -94,9 +94,9 @@ jobs:
 
       - name: Synchronize
         if: ${{ matrix.package.package_maintenance_branch != null }}
-        uses: symplify/monorepo-split-github-action@v2.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
+        uses: symplify/monorepo-split-github-action@v2.3.0
         with:
           package_directory: ${{ matrix.package.path }}
           repository_organization: ${{ matrix.package.vendor }}
