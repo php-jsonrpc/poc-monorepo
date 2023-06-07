@@ -20,7 +20,6 @@ runs:
   steps:
     - name: Enhance list
       id: generator
-      shell: bash
       uses: actions/github-script@v6
       with:
         script: |
