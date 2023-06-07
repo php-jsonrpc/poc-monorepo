@@ -82,7 +82,7 @@ jobs:
             }
             
             // Output the list as reverse order (with first commit to synchronize as first element)
-            list.reverse();
+            // list.reverse(); // Do not do that as it seems matrix start from the end of values ...
             
             console.log(`after=${JSON.stringify(list)}`);
             
