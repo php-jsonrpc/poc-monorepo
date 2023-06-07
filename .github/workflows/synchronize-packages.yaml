@@ -99,14 +99,13 @@ jobs:
           script: |
             (new Object()).entries
             return Object.fromEntries(
-                JSON.parse('${{ steps.generator2.outputs.list }}')
-                .entries()
-                .filter(([, pkg]) => typeof pkg === 'object'
-                    && typeof pkg.split_repository === 'object'
-                    && pkg.split_repository.organization != null
-                    && pkg.split_repository.name != null
-                    && pkg.split_repository.branch != null
-                )
+                Object.entries(JSON.parse('${{ steps.generator2.outputs.list }}'))
+                    .filter(([, pkg]) => typeof pkg === 'object'
+                      && typeof pkg.split_repository === 'object'
+                      && pkg.split_repository.organization != null
+                      && pkg.split_repository.name != null
+                      && pkg.split_repository.branch != null
+                    )
             );
 
       - name: Generate package list with maintenance branch to update
@@ -115,12 +114,11 @@ jobs:
         with:
           script: |
             return Object.fromEntries(
-                JSON.parse('${{ steps.generator2.outputs.list }}')
-                .entries()
-                .filter(([, pkg]) => typeof pkg === 'object'
-                    && typeof pkg.monorepo === 'object'
-                    && pkg.monorepo.maintenance_branch != null
-                )
+                Object.entries(JSON.parse('${{ steps.generator2.outputs.list }}'))
+                    .filter(([, pkg]) => typeof pkg === 'object'
+                      && typeof pkg.monorepo === 'object'
+                      && pkg.monorepo.maintenance_branch != null
+                    )
             );
 
   # First synchronize packages repositories
