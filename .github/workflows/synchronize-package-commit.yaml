@@ -42,13 +42,9 @@ jobs:
     name: To branch ${{ inputs.repository_branch }}${{ inputs.repository_tag != '' && format('(tag {0})', inputs.repository_tag) || ''  }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.sha }}
-
       - name: Synchronize branch
         env:
+          GITHUB_SHA: ${{ inputs.sha }}
           GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
         uses: symplify/monorepo-split-github-action@v2.3.0
         with:
@@ -62,6 +58,7 @@ jobs:
       - name: Synchronize tag
         if: ${{ inputs.repository_tag != '' }}
         env:
+          GITHUB_SHA: ${{ inputs.sha }}
           GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
         uses: symplify/monorepo-split-github-action@v2.3.0
         with:
