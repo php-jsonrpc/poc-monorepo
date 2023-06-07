@@ -26,23 +26,23 @@ runs:
         echo '${{ inputs.list }}' | \
           jq -r -M ' 
             map(
-              "split/\(.name)/" as $splitPrefix
+              "maintenance/\(.name)/" as $maintenancePrefix
               | .monorepo_branch="${{ github.ref_name }}"
               | (.monorepo_branch == "develop") as $isMonorepoDevelopBranch
-              | ($isMonorepoDevelopBranch == false && (.monorepo_branch | startswith($splitPrefix))) as $isMonorepoMaintenanceBranch
+              | ($isMonorepoDevelopBranch == false && (.monorepo_branch | startswith($maintenancePrefix))) as $isMonorepoMaintenanceBranch
               | (
                 if .package_tag !== null then (.package_tag | capture("^(?<major>[0-9]+)\.(?<minor>[0-9]+)") | "\(.major).\(.minor)"
                   else null
                 end
               ) as $shortRevision
               | .monorepo_maintenance_branch=(
-                if $isMonorepoDevelopBranch && $shortRevision != null then "\($splitPrefix)\($shortRevision)"
+                if $isMonorepoDevelopBranch && $shortRevision != null then "\($maintenancePrefix)\($shortRevision)"
                   else null
                 end
               )
               | .package_maintenance_branch=(
                 if $isMonorepoMaintenanceBranch && $shortRevision != null then $shortRevision
-                  elif $isMonorepoMaintenanceBranch && $shortRevision == null then (.monorepo_branch | ltrimstr($splitPrefix))
+                  elif $isMonorepoMaintenanceBranch && $shortRevision == null then (.monorepo_branch | ltrimstr($maintenancePrefix))
                   elif $isMonorepoDevelopBranch then "develop"
                   else null
                 end
