@@ -79,7 +79,7 @@ jobs:
 
             for (const [name, version] of Object.entries(versionList)) {
                 const pkg = packageList[name];
-                if (pkg && !(await tagExists(pkg.split_repository.organisation, pkg.split_repository.name, version))) {
+                if (pkg && !(await tagExists(pkg.split_repository.organization, pkg.split_repository.name, version))) {
                     pkg.version = version;
                 }
             }
@@ -97,29 +97,44 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            (new Object()).entries
-            return Object.fromEntries(
-                Object.entries(JSON.parse('${{ steps.generator2.outputs.list }}'))
-                    .filter(([, pkg]) => typeof pkg === 'object'
-                      && typeof pkg.split_repository === 'object'
-                      && pkg.split_repository.organization != null
-                      && pkg.split_repository.name != null
-                      && pkg.split_repository.branch != null
-                    )
-            );
+            const packageList = JSON.parse('${{ steps.generator2.outputs.list }}');
+            console.log(`before=${JSON.stringify(packageList)}`);
+            
+            for (const key in packageList) {
+                if (typeof pkg != 'object'
+                    || typeof pkg.split_repository !== 'object'
+                    || !pkg.split_repository.organization
+                    || !pkg.split_repository.name
+                    || !pkg.split_repository.branch
+                ) {
+                    delete packageList[key];
+                }
+            }
+            
+            console.log(`after=${JSON.stringify(packageList)}`);
+            
+            return packageList;
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
         uses: actions/github-script@v6
         with:
           script: |
-            return Object.fromEntries(
-                Object.entries(JSON.parse('${{ steps.generator2.outputs.list }}'))
-                    .filter(([, pkg]) => typeof pkg === 'object'
-                      && typeof pkg.monorepo === 'object'
-                      && pkg.monorepo.maintenance_branch != null
-                    )
-            );
+            const packageList = JSON.parse('${{ steps.generator2.outputs.list }}');
+            console.log(`before=${JSON.stringify(packageList)}`);
+            
+            for (const key in packageList) {
+                if (typeof pkg != 'object'
+                    || typeof pkg.monorepo !== 'object'
+                    || !pkg.monorepo.maintenance_branch
+                ) {
+                    delete packageList[key];
+                }
+            }
+            
+            console.log(`after=${JSON.stringify(packageList)}`);
+            
+            return packageList;
 
   # First synchronize packages repositories
   synchronize-packages:
