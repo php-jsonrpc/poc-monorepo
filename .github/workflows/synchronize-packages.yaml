@@ -121,7 +121,6 @@ jobs:
     name: Synchronize ${{ matrix.package.name }}
     needs: [ metadata ]
     if: ${{ needs.metadata.outputs.packages_to_synchronize != '[]' && needs.metadata.outputs.packages_to_synchronize != '' }}
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 4
