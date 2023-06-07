@@ -45,8 +45,7 @@ jobs:
       max-parallel: 4
       matrix:
         package: ${{ fromJson(needs.enhanced-metadata.outputs.packages) }}
-    permissions:
-      contents: write
+    runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3
