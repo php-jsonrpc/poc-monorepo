@@ -12,7 +12,7 @@ inputs:
 
 outputs:
   list:
-    description: Provided list augmented with `monorepo_branch`, `monorepo.maintenance_branch` and `split_repository.branch` properties
+    description: Provided list augmented with `monorepo.maintenance_branch`, `monorepo.maintenance_branch` and `split_repository.branch` properties
     value: ${{ steps.generator.outputs.result }}
 
 runs:

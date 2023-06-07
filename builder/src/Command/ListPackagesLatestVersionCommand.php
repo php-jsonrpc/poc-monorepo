@@ -40,9 +40,8 @@ class ListPackagesLatestVersionCommand extends AbstractSymplifyCommand
         /** @var array<string, ?string> $packageListInfos */
         $packageListInfos = [];
         foreach ($this->packageHelper->getPackages() as $package) {
-            [$vendor, $shortName] = explode('/', $package->name);
             $filepath = sprintf('%s/changelogs/changelog.yaml', $package->path);
-            if (!\file_exists($filepath)) {
+            if (false === \file_exists($filepath)) {
                 $packageListInfos[$package->name] = null;
                 continue;
             }
@@ -50,10 +49,8 @@ class ListPackagesLatestVersionCommand extends AbstractSymplifyCommand
             $packageListInfos[$package->name] = $this->getLatestVersion(new SmartFileInfo($filepath));
         }
 
-        if($input->getOption('json')) {
-            $this->symfonyStyle->writeln(
-                json_encode($packageListInfos)
-            );
+        if (true === $input->getOption('json')) {
+            $this->symfonyStyle->writeln(json_encode($packageListInfos));
         } else {
             $this->symfonyStyle->writeln('List of known packages latest version:');
             $headers = ['name', 'version'];
@@ -61,6 +58,7 @@ class ListPackagesLatestVersionCommand extends AbstractSymplifyCommand
             foreach ($packageListInfos as $key => $item) {
                 $rows[] = [$key, $item ?? 'None !'];
             }
+
             $this->symfonyStyle->table($headers, $rows);
         }
 

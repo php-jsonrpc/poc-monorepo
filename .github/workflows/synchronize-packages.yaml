@@ -32,8 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.generator2.outputs.list }}
-      packages_to_synchronize: ${{ steps.packages_to_synchronize-generator.outputs.list }}
-      packages_with_maintenance_branch_to_update: ${{ steps.packages_with_maintenance_branch_to_update-generator.outputs.list }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -77,21 +75,21 @@ jobs:
 
       - name: Generate package list with package branch or tag to synchronize
         id: packages_to_synchronize-generator
-        run: |
-          echo '${{ steps.generator2.outputs.list }}' | \
-            jq -c -M 'map(select(.split_repository.branch != null))' \
-            > list.json
-          cat list.json | jq
-          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const packageList = JSON.parse('${{ steps.generator2.outputs.list }}');
+            
+            return packageList.filter(item => item.split_repository.branch !== null);
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
-        run: |
-          echo '${{ steps.generator2.outputs.list }}' | \
-            jq -c -M 'map(select(.monorepo.maintenance_branch != null))' \
-            > list.json
-          cat list.json | jq
-          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const packageList = JSON.parse('${{ steps.generator2.outputs.list }}');
+            
+            return packageList.filter(item => item.monorepo.maintenance_branch !== null);
 
   # First synchronize packages repositories
   synchronize-packages:
@@ -109,7 +107,6 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Synchronize
-        if: ${{ matrix.package.split_repository.branch != null }}
         env:
           GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
         uses: symplify/monorepo-split-github-action@v2.3.0

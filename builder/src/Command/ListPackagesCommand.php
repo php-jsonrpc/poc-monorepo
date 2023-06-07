@@ -72,6 +72,7 @@ class ListPackagesCommand extends AbstractSymplifyCommand
                     )
                 ];
             }
+
             $this->symfonyStyle->table($headers, $rows);
         }
 
