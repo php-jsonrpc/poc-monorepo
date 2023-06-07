@@ -40,16 +40,24 @@ runs:
               pkg.monorepo = pkg.monorepo ? pkg.monorepo : {};
               pkg.split_repository = pkg.split_repository ? pkg.split_repository : {};
               
-              pkg.monorepo.maintenance_branch= isMonorepoDevelopBranch && shortVersion ? `${maintenancePrefix}${shortVersion}` : null;
+              // For any update to monorepo develop branch and in case it contains a new version
+              // => update package maintenance branch
+              pkg.monorepo.maintenance_branch = isMonorepoDevelopBranch && shortVersion ? `${maintenancePrefix}${shortVersion}` : null;
               
               if (isMonorepoMaintenanceBranch) {
+                  // => Update split repository read-only maintenance branch with new updates
                   pkg.split_repository.branch = currentBranch.replace(maintenancePrefix, '');
               } else if (isMonorepoDevelopBranch) {
+                  // => Update split repository read-only develop branch with new updates
                   pkg.split_repository.branch = 'develop';
               } else {
+                  // => Nothing to update (current branch being most likely another package maintenance branch)
                   pkg.split_repository.branch = null;
               }
-              pkg.split_repository.tag=isMonorepoMaintenanceBranch && pkg.version ? pkg.version : null;
+              
+              // For any update to package maintenance branch and in case it contains a new version
+              // => Tag split repository read-only branch
+              pkg.split_repository.tag = isMonorepoMaintenanceBranch && pkg.version !== null ? pkg.version : null;
           }
           
           return packageList;
