@@ -42,6 +42,6 @@ jobs:
           package_directory: ${{ matrix.package.path }}
           repository_organization: ${{ matrix.package.vendor }}
           repository_name: ${{ matrix.package.short_name }}
-          user_name: PHP-json-rpc
-          user_email: 8222035+PHP-json-rpc[bot]@users.noreply.github.com
+          user_name: yoanm
+          user_email: yoanm@users.noreply.github.com
           branch: develop
