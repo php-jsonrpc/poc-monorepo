@@ -1,8 +1,8 @@
 name: Update packages maintenance branches
 
-on:
-  push:
-    branches: [] # TODO configure !
+#on:
+#  push:
+#    branches: [develop] # TODO configure !
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref_name }}"
