@@ -62,7 +62,7 @@ jobs:
           script: |
             const commitInfosList = JSON.parse('${{ steps.list-commits.outputs.list }}');
             
-            if (commitInfosList.length > 0) {
+            if (commitInfosList.length === 0) {
                 return [];
             }
             
