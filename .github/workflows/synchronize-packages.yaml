@@ -104,4 +104,4 @@ jobs:
           user_name: ${{ env.COMMIT_AUTHOR_NAME }}
           user_email: ${{ env.COMMIT_AUTHOR_EMAIL }}
           branch: ${{ matrix.package.package_maintenance_branch }}
-          tag: ${{ matrix.package.package_tag | length > 0 && matrix.package.package_tag || 'null' }}
+          tag: ${{ matrix.package.package_tag }}
