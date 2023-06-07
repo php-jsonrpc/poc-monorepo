@@ -30,6 +30,10 @@ on:
         description: Target repository tag
         type: string
         required: false
+      SPLIT_ACCESS_TOKEN:
+        description: Access token to use to perform the split
+        type: string
+        required: true
 
 permissions: {}
 
@@ -107,3 +111,4 @@ jobs:
       repository_name: ${{ inputs.repository_name }}
       repository_branch: ${{ inputs.repository_branch }}
       repository_tag: ${{ matrix.commit.repository_tag }}
+      SPLIT_ACCESS_TOKEN: ${{ inputs.SPLIT_ACCESS_TOKEN }}

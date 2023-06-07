@@ -157,6 +157,7 @@ jobs:
       repository_name: ${{ matrix.package.split_repository.name }}
       repository_branch: ${{ matrix.package.split_repository.branch }}
       repository_tag: ${{ matrix.package.split_repository.tag }}
+      SPLIT_ACCESS_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
 
   # Then update monorepo maintenance branches => maintenance branches synchronization to packages repositories
   # branches and tag will be done by this workflow (but from instances triggered for each maintenance branch updated)

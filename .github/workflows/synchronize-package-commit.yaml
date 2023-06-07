@@ -34,6 +34,10 @@ on:
         description: Target repository tag
         type: string
         required: false
+      SPLIT_ACCESS_TOKEN:
+        description: Access token to use to perform the split
+        type: string
+        required: true
 
 permissions: {}
 
@@ -49,7 +53,7 @@ jobs:
 
       - name: Synchronize branch
         env:
-          GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ inputs.SPLIT_ACCESS_TOKEN }}
         uses: symplify/monorepo-split-github-action@v2.3.0
         with:
           package_directory: ${{ inputs.package_directory }}
@@ -62,7 +66,7 @@ jobs:
       - name: Synchronize tag
         if: ${{ inputs.repository_tag != '' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ inputs.SPLIT_ACCESS_TOKEN }}
         uses: symplify/monorepo-split-github-action@v2.3.0
         with:
           package_directory: ${{ inputs.package_directory }}
