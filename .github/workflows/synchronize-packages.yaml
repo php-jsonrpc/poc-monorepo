@@ -111,9 +111,10 @@ jobs:
                 }
             }
             
-            console.log(`after=${JSON.stringify(packageList)}`);
+            const finalList = Object.keys(packageList).length > 0 ? packageList : [];
+            console.log(`after=${JSON.stringify(finalList)}`);
             
-            return packageList.length > 0 ? packageList : [];
+            return finalList;
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
@@ -132,9 +133,10 @@ jobs:
                 }
             }
             
-            console.log(`after=${JSON.stringify(packageList)}`);
+            const finalList = Object.keys(packageList).length > 0 ? packageList : [];
+            console.log(`after=${JSON.stringify(finalList)}`);
             
-            return packageList.length > 0 ? packageList : [];
+            return finalList;
 
   # First synchronize packages repositories
   synchronize-packages:
