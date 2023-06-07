@@ -59,7 +59,7 @@ jobs:
         shell: bash
         run: |
           echo '${{ steps.generator.outputs.list }}' | \
-            jq -c -M 'map(select((.package_maintenance_branch | length > 0) || (.package_tag | length > 0)))' \
+            jq -c -M 'map(select((.package_maintenance_branch | length > 0) or (.package_tag | length > 0)))' \
             > list.json
           cat list.json | jq
           echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
