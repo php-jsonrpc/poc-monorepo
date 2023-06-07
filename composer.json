@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": "^8.2",
+        "composer/semver": "^3.3",
         "symfony/console": "^6.2",
         "symfony/dependency-injection": "^6.2",
         "symfony/filesystem": "^6.2",

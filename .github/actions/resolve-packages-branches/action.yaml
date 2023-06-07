@@ -1,9 +1,9 @@
 name: Resolve packages branches
 description: |
-  Append `monorepo_branch`, `monorepo_maintenance_branch`, and `package_maintenance_branch` properties to provided list.
-  - `monorepo_branch` (string): Current branch inside the monorepo
-  - `monorepo_maintenance_branch` (string | null): Branch to update inside the monorepo (=maintenance branch). `null` if nothing to update
-  - `package_maintenance_branch` (string | null): Branch to synchronize on package repository side. `null` if nothing to synchronize
+  Append `monorepo.maintenance_branch`, `split_repository.branch` and `split_repository.tag` properties to provided list.
+  - `monorepo.maintenance_branch` (string | null): Branch to update inside the monorepo (=maintenance branch). `null` if nothing to update
+  - `split_repository.branch` (string | null): Branch to synchronize on package repository side. `null` if nothing to synchronize
+  - `split_repository.tag` (string | null): Tag to create on package repository side. `null` if nothing to create
 
 inputs:
   list:
@@ -12,8 +12,8 @@ inputs:
 
 outputs:
   list:
-    description: Provided list augmented with `monorepo_branch`, `monorepo_maintenance_branch` and `package_maintenance_branch` properties
-    value: ${{ steps.generator.outputs.list }}
+    description: Provided list augmented with `monorepo.maintenance_branch`, `monorepo.maintenance_branch` and `split_repository.branch` properties
+    value: ${{ steps.generator.outputs.result }}
 
 runs:
   using: composite
@@ -21,34 +21,35 @@ runs:
     - name: Enhance list
       id: generator
       shell: bash
-      run: |
-        # Enhance list
-        echo '${{ inputs.list }}' | \
-          jq -r -M ' 
-            map(
-              "maintenance/\(.name)/" as $maintenancePrefix
-              | .monorepo_branch="${{ github.ref_name }}"
-              | (.monorepo_branch == "develop") as $isMonorepoDevelopBranch
-              | ($isMonorepoDevelopBranch == false and (.monorepo_branch | startswith($maintenancePrefix))) as $isMonorepoMaintenanceBranch
-              | (
-                if .package_tag !== null then (.package_tag | capture("^(?<major>[0-9]+)\.(?<minor>[0-9]+)") | "\(.major).\(.minor)"
-                  else null
-                end
-              ) as $shortRevision
-              | .monorepo_maintenance_branch=(
-                if $isMonorepoDevelopBranch and $shortRevision != null then "\($maintenancePrefix)\($shortRevision)"
-                  else null
-                end
-              )
-              | .package_maintenance_branch=(
-                if $isMonorepoMaintenanceBranch and $shortRevision != null then $shortRevision
-                  elif $isMonorepoMaintenanceBranch and $shortRevision == null then (.monorepo_branch | ltrimstr($maintenancePrefix))
-                  elif $isMonorepoDevelopBranch then "develop"
-                  else null
-                end
-              )
-            )
-            | tostring
-          ' > list.json
-        cat list.json | jq
-        echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const versionRegex = /^([0-9]+)\.([0-9]+).+/;
+          const packageList = JSON.parse('${{ inputs.list }}');
+          const currentBranch = "${{ github.ref_name }}";
+          const isMonorepoDevelopBranch = currentBranch === "develop";
+          
+          for (const name of Object.keys(packageList)) {
+              const pkg = packageList[name];
+              const maintenancePrefix = `maintenance/${pkg.name}/`;
+              const isMonorepoMaintenanceBranch = isMonorepoDevelopBranch !== true && currentBranch.startsWith(maintenancePrefix);
+              const shortVersion = pkg.version !== null && pkg.version.match(versionRegex)
+                  ? pkg.version.replace(versionRegex, '$1.$2')
+                  : undefined;
+              
+              pkg.monorepo = pkg.monorepo ? pkg.monorepo : {};
+              pkg.split_repository = pkg.split_repository ? pkg.split_repository : {};
+              
+              pkg.monorepo.maintenance_branch= isMonorepoDevelopBranch && shortVersion ? `${maintenancePrefix}${shortVersion}` : null;
+              
+              if (isMonorepoMaintenanceBranch) {
+                  pkg.split_repository.branch = currentBranch.replace(maintenancePrefix, '');
+              } else if (isMonorepoDevelopBranch) {
+                  pkg.split_repository.branch = 'develop';
+              } else {
+                  pkg.split_repository.branch = null;
+              }
+              pkg.split_repository.tag=isMonorepoMaintenanceBranch && pkg.version ? pkg.version : null;
+          }
+          
+          return packageList;

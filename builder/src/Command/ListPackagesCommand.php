@@ -15,7 +15,7 @@ use function str_replace;
 
 class ListPackagesCommand extends AbstractSymplifyCommand
 {
-    const FIELD_LIST = ['name', 'path', 'vendor', 'short_name'];
+    const FIELD_LIST = ['name', 'path', 'split_repository'];
 
     public function __construct(
         private readonly PackageHelper $packageHelper,
@@ -32,18 +32,18 @@ class ListPackagesCommand extends AbstractSymplifyCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $displayFieldList = self::FIELD_LIST;
         $packageListInfos = [];
         foreach ($this->packageHelper->getPackages() as $package) {
-            [$vendor, $shortName] = explode('/', $package->name);
             $packageListInfos[$package->name] = array_reduce(
-                $displayFieldList,
-                function (array $carry, string $field) use ($package, $vendor, $shortName): array {
+                self::FIELD_LIST,
+                function (array $carry, string $field) use ($package): array {
                     $carry[$field] = match ($field) {
                         'name' => $package->name,
                         'path' => $package->path,
-                        'vendor' => $vendor,
-                        'short_name' => $shortName,
+                        'split_repository' => [
+                            'organisation' => $package->splitRepository->organisation,
+                            'name' => $package->splitRepository->name,
+                        ],
                         default => throw new Exception(sprintf('Unknown field "%s"', $field))
                     };
 
@@ -59,8 +59,21 @@ class ListPackagesCommand extends AbstractSymplifyCommand
             );
         } else {
             $this->symfonyStyle->writeln('List of known packages:');
-            $headers = array_map(static fn ($field) => ucfirst(str_replace('_', ' ', $field)), $displayFieldList);
-            $this->symfonyStyle->table($headers, $packageListInfos);
+            $headers = ['Name', 'Path', 'Split repository'];
+            $rows = [];
+            foreach ($packageListInfos as $item) {
+                $rows[] = [
+                    $item['name'],
+                    $item['path'],
+                    sprintf(
+                        '%s/%s',
+                        $item['split_repository']['organisation'],
+                        $item['split_repository']['name']
+                    )
+                ];
+            }
+
+            $this->symfonyStyle->table($headers, $rows);
         }
 
         return Command::SUCCESS;
