@@ -1,0 +1,20 @@
+name: List packages latest version
+description: Output list of known packages with their latest version
+
+outputs:
+  list:
+    description: Mapping with package name as key and latest version as value (value might be null)
+    value: ${{ steps.list-generator.outputs.list }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate list
+      id: list-generator
+      shell: bash
+      # Do not run command inside a $(...) clause, else errors won't be caught !
+      run: |
+        # Generate list
+        ./vendor/bin/monorepo-builder packages:version:list-latest --json > list.json
+        cat list.json | jq
+        echo "list=$(cat list.json)" >> $GITHUB_OUTPUT

@@ -106,7 +106,7 @@ jobs:
                 file_path: item,
                 type: 'workflow',
                 schema_file_path: '${{ env.WORKFLOW_SCHEMA_FILE_PATH }}',
-                name: await getName(item),
+                name: await getName(item)
               });
             }
             for (const item of JSON.parse('${{ steps.changes.outputs.actions_files }}')) {
@@ -114,12 +114,11 @@ jobs:
                 file_path: item,
                 type: 'action',
                 schema_file_path: '${{ env.ACTION_SCHEMA_FILE_PATH }}',
-                name: await getName(item),
+                name: await getName(item)
               });
             }
 
             return list;
-  
 
   validate:
     name: ${{ matrix.name && format('"{0}" {1}', matrix.name, matrix.type) || matrix.file_path }}

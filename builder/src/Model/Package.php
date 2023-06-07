@@ -12,6 +12,7 @@ class Package
     public function __construct(
         public readonly string $name,
         public readonly SmartFileInfo $composer,
+        public readonly Repository $splitRepository
     ) {
         $this->path = $this->composer->getRelativeDirectoryPath();
     }
