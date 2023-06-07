@@ -73,6 +73,8 @@ jobs:
       max-parallel: 4
       matrix:
         package: ${{ fromJson(needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update).* }}
+    permissions:
+      contents: write
     uses: ./.github/workflows/update-branch.yaml
     with:
       head: ${{ github.ref_name }}
