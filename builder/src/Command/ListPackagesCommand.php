@@ -41,7 +41,7 @@ class ListPackagesCommand extends AbstractSymplifyCommand
                         'name' => $package->name,
                         'path' => $package->path,
                         'split_repository' => [
-                            'organisation' => $package->splitRepository->organisation,
+                            'organization' => $package->splitRepository->organization,
                             'name' => $package->splitRepository->name,
                         ],
                         default => throw new Exception(sprintf('Unknown field "%s"', $field))
@@ -67,7 +67,7 @@ class ListPackagesCommand extends AbstractSymplifyCommand
                     $item['path'],
                     sprintf(
                         '%s/%s',
-                        $item['split_repository']['organisation'],
+                        $item['split_repository']['organization'],
                         $item['split_repository']['name']
                     )
                 ];

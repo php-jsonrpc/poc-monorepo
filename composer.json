@@ -1,6 +1,6 @@
 {
     "name": "php-jsonrpc/poc-monorepo",
-    "description": "Organisation monorepo",
+    "description": "Organization monorepo",
     "license": "proprietary",
     "type": "project",
     "authors": [

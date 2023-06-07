@@ -36,7 +36,7 @@ class PackageHelper
                         $pkgName,
                         $composerFile,
                         new Repository(
-                            $composerInfos['extra']['monorepo-split']['target_organisation'] ?? $vendor,
+                            $composerInfos['extra']['monorepo-split']['target_organization'] ?? $vendor,
                             $composerInfos['extra']['monorepo-split']['target_repository'] ?? $shortName,
                         )
                     );

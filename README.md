@@ -8,4 +8,4 @@
 [![CI](https://github.com/php-jsonrpc/poc-monorepo/actions/workflows/CI.yaml/badge.svg?branch=develop)](https://github.com/php-jsonrpc/poc-monorepo/actions/workflows/CI.yaml)
 [![codecov](https://codecov.io/gh/php-jsonrpc/poc-monorepo/branch/develop/graph/badge.svg?token=IW6HXQN6U8)](https://codecov.io/gh/php-jsonrpc/poc-monorepo)
 
-Organisation monorepo Proof Of Concept
+Organization monorepo Proof Of Concept
