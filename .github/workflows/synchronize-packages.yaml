@@ -113,7 +113,7 @@ jobs:
             
             console.log(`after=${JSON.stringify(packageList)}`);
             
-            return packageList;
+            return packageList.length > 0 ? packageList : [];
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
@@ -134,42 +134,42 @@ jobs:
             
             console.log(`after=${JSON.stringify(packageList)}`);
             
-            return packageList;
+            return packageList.length > 0 ? packageList : [];
 
   # First synchronize packages repositories
   synchronize-packages:
-    name: Synchronize ${{ matrix.name }}
+    name: Synchronize ${{ matrix.package.name }}
     needs: [ metadata ]
     if: ${{ needs.metadata.outputs.packages_to_synchronize != '[]' && needs.metadata.outputs.packages_to_synchronize != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        include: ${{ fromJson(needs.metadata.outputs.packages_to_synchronize).* }}
+        package: ${{ fromJson(needs.metadata.outputs.packages_to_synchronize).* }}
     uses: ./.github/workflows/synchronize-package-commit-list.yaml
     with:
       sha_begin: ${{ github.event.before }}
       sha_end: ${{ github.sha }}
-      package_directory: ${{ matrix.path }}
-      repository_organization: ${{ matrix.split_repository.organization }}
-      repository_name: ${{ matrix.split_repository.name }}
-      repository_branch: ${{ matrix.split_repository.branch }}
-      repository_tag: ${{ matrix.split_repository.tag }}
+      package_directory: ${{ matrix.package.path }}
+      repository_organization: ${{ matrix.package.split_repository.organization }}
+      repository_name: ${{ matrix.package.split_repository.name }}
+      repository_branch: ${{ matrix.package.split_repository.branch }}
+      repository_tag: ${{ matrix.package.split_repository.tag }}
 
   # Then update monorepo maintenance branches => maintenance branches synchronization to packages repositories
   # branches and tag will be done by this workflow (but from instances triggered for each maintenance branch updated)
   update-monorepo-maintenance-branches:
-    name: Update ${{ matrix.name }} monorepo maintenance branch
+    name: Update ${{ matrix.package.name }} monorepo maintenance branch
     needs: [ metadata, synchronize-packages ]
     if: ${{ needs.metadata.outputs.packages_with_maintenance_branch_to_update != '[]' && needs.metadata.outputs.packages_with_maintenance_branch_to_update != '' }}
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        include: ${{ fromJson(needs.metadata.outputs.packages_with_maintenance_branch_to_update).* }}
+        package: ${{ fromJson(needs.metadata.outputs.packages_with_maintenance_branch_to_update).* }}
     permissions:
       contents: write
     uses: ./.github/workflows/update-branch.yaml
     with:
       head: ${{ github.ref_name }}
-      base: ${{ matrix.monorepo.maintenance_branch }}
+      base: ${{ matrix.package.monorepo.maintenance_branch }}
