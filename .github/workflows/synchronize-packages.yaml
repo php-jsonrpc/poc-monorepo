@@ -1,0 +1,113 @@
+name: Synchronize packages
+
+on:
+  push:
+    branches:
+      - develop
+      - split/**/*
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref_name }}"
+  cancel-in-progress: false # false => wait previous workflow execution before starting
+
+defaults:
+  run:
+    shell: bash
+
+permissions: {}
+
+env:
+  COMMIT_AUTHOR_NAME: yoanm
+  COMMIT_AUTHOR_EMAIL: yoanm@users.noreply.github.com
+
+jobs:
+  metadata:
+    name: Metadata
+    uses: ./.github/workflows/list-packages.yaml
+
+  enhanced-metadata:
+    name: Metadata / Updated packages
+    needs: [ metadata ]
+    if: ${{ needs.metadata.outputs.packages != '[]' && needs.metadata.outputs.packages != '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.generator2.outputs.list }}
+      packages_with_maintenance_branch_to_update: ${{ steps.packages_with_maintenance_branch_to_update-generator.outputs.list }}
+      packages_to_synchronize: ${{ steps.packages_to_synchronize-generator.outputs.list }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Resolve packages state
+        id: generator
+        uses: ./.github/actions/resolve-packages-state
+        with:
+          list: ${{ needs.metadata.outputs.packages }}
+
+      - name: Resolve branches
+        id: generator2
+        uses: ./.github/actions/resolve-packages-branches
+        with:
+          list: ${{ steps.generator.outputs.list }}
+
+      - name: Generate package list with maintenance branch to update
+        id: packages_with_maintenance_branch_to_update-generator
+        shell: bash
+        run: |
+          echo '${{ steps.generator2.outputs.list }}' | \
+            jq -c -M 'map(select(.package_maintenance_branch | length > 0))' \
+            > list.json
+          cat list.json | jq
+          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+
+      - name: Generate package list with package branch or tag to update
+        id: packages_to_synchronize-generator
+        shell: bash
+        run: |
+          echo '${{ steps.generator2.outputs.list }}' | \
+            jq -c -M 'map(select((.package_maintenance_branch | length > 0) || (.package_tag | length > 0)))' \
+            > list.json
+          cat list.json | jq
+          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+
+  update-monorepo-maintenance-branches:
+    name: Update ${{ matrix.package.name }} monorepo maintenance branch
+    needs: [ metadata ]
+    if: ${{ needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update != '[]' && needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update != '' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        package: ${{ fromJson(needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update).* }}
+    uses: ./.github/workflows/update-branch.yaml
+      with:
+        head: ${{ github.ref_name }}
+        base: ${{ matrix.package.monorepo_maintenance_branch }}
+
+  synchronize-packages:
+    name: Synchronize ${{ matrix.package.name }} branches & tag
+    needs: [ metadata, update-monorepo-maintenance-branches ]
+    if: ${{ needs.enhanced-metadata.outputs.packages_to_synchronize != '[]' && needs.enhanced-metadata.outputs.packages_to_synchronize != '' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        package: ${{ fromJson(needs.enhanced-metadata.outputs.packages_to_synchronize).* }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Synchronize
+        if: ${{ matrix.package.package_maintenance_branch != null }}
+        uses: symplify/monorepo-split-github-action@v2.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.SPLIT_ACCESS_TOKEN }}
+        with:
+          package_directory: ${{ matrix.package.path }}
+          repository_organization: ${{ matrix.package.vendor }}
+          repository_name: ${{ matrix.package.short_name }}
+          user_name: ${{ env.COMMIT_AUTHOR_NAME }}
+          user_email: ${{ env.COMMIT_AUTHOR_EMAIL }}
+          branch: ${{ matrix.package.package_maintenance_branch }}
+          tag: ${{ matrix.package.package_tag | length > 0 && matrix.package.package_tag || 'null' }}
