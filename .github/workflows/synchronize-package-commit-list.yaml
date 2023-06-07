@@ -1,0 +1,107 @@
+name: Synchronize package commit list
+on:
+  workflow_call:
+    inputs:
+      sha_begin:
+        description: First Git sha to synchronize
+        type: string
+        required: true
+      sha_end:
+        description: Last Git sha to synchronize
+        type: string
+        required: true
+      package_directory:
+        description: Path to the package inside the current repository
+        type: string
+        required: true
+      repository_organization:
+        description: Target repository organisation
+        type: string
+        required: true
+      repository_name:
+        description: Target repository name
+        type: string
+        required: true
+      repository_branch:
+        description: Target repository branch
+        type: string
+        required: true
+      repository_tag:
+        description: Target repository tag
+        type: string
+        required: false
+
+permissions: {}
+
+jobs:
+  metadata:
+    name: Metadata
+    runs-on: ubuntu-latest
+    outputs:
+      commits: ${{ steps.matrix-generator.outputs.result }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          depth: 0
+
+      - name: List commits infos
+        id: list-commits
+        run: |
+          # Retrieve commit range
+          git show -s --format='["%h", "%an", "%ae"]' ${{ inputs.sha_begin }}...${{ inputs.sha_end }}) | tee list.txt
+          # Take into account first commit
+          git show -s --format='["%h", "%an", "%ae"]' ${{ inputs.sha_begin }} | tee -a list.txt
+          echo "list=$(cat list.json)" >> $GITHUB_OUTPUT
+
+      - name: Generate matrix
+        id: matrix-generator
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const commitInfosList = '${{ steps.list-commits.outputs.list }}'
+                .split("\n")
+                .filter(data => data && data.length > 0)
+                .map(data => JSON.parse(data));
+            
+            if (commitInfosList.length > 0) {
+                return [];
+            }
+            
+            const rawTag = '${{ inputs.repository_tag }}'.trim();
+            const tag = rawTag.length > 0 ? rawTag : undefined;
+            const result = [];
+            for (const key in commitInfosList) {
+                const isFirstCommit = Number.parseInt(key) === 0;
+                const commitInfos = commitInfosList[key];
+                result.push({
+                    sha: commitInfos[0],
+                    author_name: commitInfos[1],
+                    author_email: commitInfos[2],
+                    // Tag repository only on latest commit (=first commit of the list) !
+                    repository_tag: isFirstCommit && tag ? tag : undefined
+                });
+            }
+            
+            // Output the list as reverse order (with first commit to synchronize as first element)
+            return result.reverse();
+
+  main:
+    name: From ${{ matrix.commit.sha }}
+    needs: [ metadata ]
+    if: ${{ needs.metadata.outputs.commits != '[]' && needs.metadata.outputs.commits != '' }}
+    strategy:
+      fail-fast: true # Stop as soon as there is an error, so it can be resumed
+      max-parallel: 1 # Synchro must be done commit by commit !
+      matrix:
+        commit: ${{ fromJson(needs.metadata.outputs.commits).* }}
+    uses: ./.github/workflows/synchronize-package-commit.yaml
+    with:
+      sha: ${{ matrix.commit.sha }}
+      author_name: ${{ matrix.commit.author_name }}
+      author_email: ${{ matrix.commit.author_email }}
+      package_directory: ${{ inputs.package_directory }}
+      repository_organization: ${{ inputs.repository_organization }}
+      repository_name: ${{ inputs.repository_name }}
+      repository_branch: ${{ inputs.repository_branch }}
+      repository_tag: ${{ matrix.commit.repository_tag }}
