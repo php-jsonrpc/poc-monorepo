@@ -100,7 +100,7 @@ jobs:
             (new Object()).entries
             return Object.fromEntries(
                 JSON.parse('${{ steps.generator2.outputs.list }}')
-                .entries
+                .entries()
                 .filter(([, pkg]) => typeof pkg === 'object'
                     && typeof pkg.split_repository === 'object'
                     && pkg.split_repository.organization != null
@@ -116,7 +116,7 @@ jobs:
           script: |
             return Object.fromEntries(
                 JSON.parse('${{ steps.generator2.outputs.list }}')
-                .entries
+                .entries()
                 .filter(([, pkg]) => typeof pkg === 'object'
                     && typeof pkg.monorepo === 'object'
                     && pkg.monorepo.maintenance_branch != null
