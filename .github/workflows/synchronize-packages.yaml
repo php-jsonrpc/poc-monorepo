@@ -150,8 +150,8 @@ jobs:
         package: ${{ fromJson(needs.metadata.outputs.packages_to_synchronize).* }}
     uses: ./.github/workflows/synchronize-package-commit-list.yaml
     with:
-      sha_begin: ${{ github.event.before }}
-      sha_end: ${{ github.sha }}
+      after_sha: ${{ github.event.before }}
+      until_sha: ${{ github.sha }}
       package_directory: ${{ matrix.package.path }}
       repository_organization: ${{ matrix.package.split_repository.organization }}
       repository_name: ${{ matrix.package.split_repository.name }}
