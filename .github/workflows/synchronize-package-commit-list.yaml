@@ -49,9 +49,9 @@ jobs:
         id: list-commits
         run: |
           # Retrieve commit range
-          git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}...${{ inputs.sha_end }}' | tr "\n" "," | tee list.txt
+          git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}...${{ inputs.sha_end }}' | tr "\n" "," | tee list.json
           # Take into account first commit
-          git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}' | tee -a list.txt
+          git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}' | tee -a list.json
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "list=[$(cat list.json)]" >> $GITHUB_OUTPUT
 
