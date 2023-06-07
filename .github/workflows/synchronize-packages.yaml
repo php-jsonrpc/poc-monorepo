@@ -42,7 +42,7 @@ jobs:
         id: generator
         uses: ./.github/actions/resolve-packages-branches
         with:
-          list: ${{ steps.generator.outputs.list }}
+          list: ${{ need.metadta.outputs.package }}
 
       - name: Generate package list with maintenance branch to update
         id: packages_with_maintenance_branch_to_update-generator
@@ -66,7 +66,7 @@ jobs:
 
   update-monorepo-maintenance-branches:
     name: Update ${{ matrix.package.name }} monorepo maintenance branch
-    needs: [ metadata ]
+    needs: [ enhanced-metadata ]
     if: ${{ needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update != '[]' && needs.enhanced-metadata.outputs.packages_with_maintenance_branch_to_update != '' }}
     strategy:
       fail-fast: false
@@ -82,7 +82,7 @@ jobs:
 
   synchronize-packages:
     name: Synchronize ${{ matrix.package.name }} branches & tag
-    needs: [ metadata, update-monorepo-maintenance-branches ]
+    needs: [ enhanced-metadata, update-monorepo-maintenance-branches ]
     if: ${{ needs.enhanced-metadata.outputs.packages_to_synchronize != '[]' && needs.enhanced-metadata.outputs.packages_to_synchronize != '' }}
     strategy:
       fail-fast: false
