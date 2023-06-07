@@ -49,23 +49,18 @@ jobs:
         id: list-commits
         run: |
           # Retrieve commit range
-          git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}...${{ inputs.sha_end }}' | tee list.txt
+          git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}...${{ inputs.sha_end }}' | tr "\n" "," | tee list.txt
           # Take into account first commit
           git show -s --format='["%h", "%an", "%ae"]' '${{ inputs.sha_begin }}' | tee -a list.txt
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "list<<$EOF" >> "$GITHUB_OUTPUT"
-          cat list.txt >> "$GITHUB_OUTPUT"
-          echo "$EOF" >> "$GITHUB_OUTPUT"
+          echo "list=[$(cat list.json)]" >> $GITHUB_OUTPUT
 
       - name: Generate matrix
         id: matrix-generator
         uses: actions/github-script@v6
         with:
           script: |
-            const commitInfosList = '${{ steps.list-commits.outputs.list }}'
-                .split("\n")
-                .filter(data => data && data.length > 0)
-                .map(data => JSON.parse(data));
+            const commitInfosList = JSON.parse('${{ steps.list-commits.outputs.list }}');
             
             if (commitInfosList.length > 0) {
                 return [];
