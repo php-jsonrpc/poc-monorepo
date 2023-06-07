@@ -127,7 +127,7 @@ jobs:
       max-parallel: 4
       matrix:
         package: ${{ fromJson(needs.metadata.outputs.packages_to_synchronize).* }}
-    uses: ./.github/workflows/synchronize-package-commit.yaml
+    uses: ./.github/workflows/synchronize-package-commit-list.yaml
       with:
         sha_begin: ${{ github.event.before }}
         sha_end: ${{ github.sha }}
